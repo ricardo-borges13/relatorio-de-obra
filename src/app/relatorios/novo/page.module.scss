@@ -1,0 +1,262 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-canvas);
+}
+
+.main {
+  width: min(100% - 48px, 960px);
+  margin: 0 auto;
+  padding: 40px 0 96px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 580;
+  line-height: 1.4;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+.introduction {
+  margin-top: 32px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--color-border);
+
+  h1 {
+    color: var(--color-text-primary);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 620;
+    letter-spacing: -0.045em;
+    line-height: 1.08;
+  }
+
+  p {
+    margin-top: 14px;
+    color: var(--color-text-secondary);
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+}
+
+.section,
+.photoSection {
+  padding-top: 32px;
+}
+
+.sectionHeading {
+  margin-bottom: 20px;
+
+  h2 {
+    color: var(--color-text-primary);
+    font-size: 1.125rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+  }
+
+  p {
+    margin-top: 6px;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+
+    span {
+      color: #805236;
+      font-weight: 700;
+    }
+  }
+}
+
+.fieldsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.55fr);
+  gap: 20px 24px;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.4;
+
+    span {
+      color: #805236;
+    }
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    color: var(--color-text-primary);
+    background: var(--color-surface);
+    font: inherit;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+
+    &:focus {
+      border-color: var(--color-action);
+      box-shadow: 0 0 0 3px rgb(38 54 62 / 13%);
+    }
+  }
+
+  input {
+    min-height: 48px;
+    padding: 0 13px;
+  }
+
+  textarea {
+    min-height: 132px;
+    padding: 12px 13px;
+    resize: vertical;
+  }
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.photoSection {
+  margin-top: 40px;
+  border-top: 1px solid var(--color-border);
+}
+
+.photoActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.primaryPhotoAction,
+.secondaryPhotoAction,
+.generateButton,
+.cancelButton {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: var(--radius-small);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.primaryPhotoAction,
+.generateButton {
+  border: 1px solid var(--color-action);
+  color: var(--color-action-text);
+  background: var(--color-action);
+
+  &:hover {
+    border-color: var(--color-action-hover);
+    background: var(--color-action-hover);
+  }
+}
+
+.secondaryPhotoAction,
+.cancelButton {
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  text-decoration: none;
+
+  &:hover {
+    border-color: #bcc3c5;
+    background: #f8f9f9;
+  }
+}
+
+.photoEmptyState {
+  display: flex;
+  min-height: 120px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-medium);
+  background: rgb(255 255 255 / 55%);
+
+  p {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+}
+
+.finalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 720px) {
+  .main {
+    width: min(100% - 32px, 960px);
+    padding: 28px 0 64px;
+  }
+
+  .introduction {
+    margin-top: 28px;
+    padding-bottom: 32px;
+  }
+
+  .fieldsGrid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .fullWidth {
+    grid-column: auto;
+  }
+
+  .photoSection {
+    margin-top: 32px;
+  }
+
+  .photoActions,
+  .finalActions {
+    flex-direction: column;
+  }
+
+  .primaryPhotoAction,
+  .secondaryPhotoAction,
+  .generateButton,
+  .cancelButton {
+    width: 100%;
+  }
+
+  .finalActions {
+    margin-top: 32px;
+  }
+}
+
+@media (max-width: 420px) {
+  .main {
+    width: min(100% - 28px, 960px);
+  }
+
+  .photoEmptyState {
+    min-height: 108px;
+  }
+}

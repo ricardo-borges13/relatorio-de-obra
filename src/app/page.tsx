@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import Link from "next/link";
 import styles from "./page.module.scss";
 
 export default function Home() {
@@ -13,10 +14,10 @@ export default function Home() {
             <p className={styles.description}>
               Registre serviços terceirizados executados na obra e gere relatórios fotográficos profissionais.
             </p>
-            <button className={styles.newReportButton} type="button">
+            <Link className={styles.newReportButton} href="/relatorios/novo">
               <span aria-hidden="true">+</span>
               Novo relatório
-            </button>
+            </Link>
           </div>
         </section>
 
