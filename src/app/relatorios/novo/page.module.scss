@@ -196,6 +196,7 @@
 .primaryPhotoAction,
 .secondaryPhotoAction,
 .generateButton,
+.previewButton,
 .cancelButton {
   display: inline-flex;
   min-height: 46px;
@@ -227,6 +228,7 @@
 }
 
 .secondaryPhotoAction,
+.previewButton,
 .cancelButton {
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
@@ -381,6 +383,13 @@
   border-top: 1px solid var(--color-border);
 }
 
+.pdfError {
+  margin-top: 24px;
+  color: #805236;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
 @media (max-width: 720px) {
   .main {
     width: min(100% - 32px, 960px);
@@ -423,6 +432,7 @@
   .primaryPhotoAction,
   .secondaryPhotoAction,
   .generateButton,
+  .previewButton,
   .cancelButton {
     width: 100%;
   }

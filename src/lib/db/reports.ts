@@ -72,6 +72,18 @@ export const touchReport = async (id: string) => {
   return updatedAt;
 };
 
+export const markReportFinished = async (report: Report): Promise<Report> => {
+  const finishedReport: Report = {
+    ...report,
+    status: "finished",
+    updatedAt: createTimestamp(),
+  };
+
+  await database.reports.put(finishedReport);
+
+  return finishedReport;
+};
+
 export const deleteReport = async (reportId: string) => {
   await database.transaction("rw", database.reports, database.reportPhotos, async () => {
     await database.reportPhotos.where("reportId").equals(reportId).delete();

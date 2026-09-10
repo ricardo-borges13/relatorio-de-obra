@@ -13,6 +13,10 @@
 }
 
 .previewNavigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 18px;
 }
 
@@ -28,6 +32,37 @@
 
 .backLink:hover {
   text-decoration: underline;
+}
+
+.savePdfButton {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--color-action);
+  border-radius: var(--radius-small);
+  color: var(--color-action-text);
+  background: var(--color-action);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  cursor: pointer;
+
+  &:not(:disabled):hover {
+    border-color: var(--color-action-hover);
+    background: var(--color-action-hover);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: wait;
+  }
+}
+
+.pdfError {
+  width: min(210mm, calc(100vw - 32px));
+  margin: -8px auto 16px;
+  color: #805236;
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
 .documentStack {
@@ -270,6 +305,16 @@
 
   .previewNavigation {
     margin-bottom: 12px;
+  }
+
+  .previewNavigation {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .savePdfButton {
+    width: 100%;
   }
 
   .documentStack {

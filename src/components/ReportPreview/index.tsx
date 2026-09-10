@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getReportPhotos } from "@/lib/db/photos";
-import { getReportById } from "@/lib/db/reports";
+import { getReportById, markReportFinished } from "@/lib/db/reports";
+import { downloadReportPdf } from "@/lib/pdf/download-report-pdf";
+import { getReportPdfFilename } from "@/lib/pdf/filename";
+import { generateReportPdf } from "@/lib/pdf/generate-report-pdf";
+import { validateReportForPdf } from "@/lib/pdf/validate-report-for-pdf";
 import { paginateReportPhotos } from "@/lib/reports/paginate-photos";
 import type { Report } from "@/types/report";
 import type { ReportPhoto } from "@/types/report-photo";
@@ -24,6 +28,8 @@ export default function ReportPreview({ reportId }: ReportPreviewProps) {
   const [photos, setPhotos] = useState<PreviewPhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -100,11 +106,42 @@ export default function ReportPreview({ reportId }: ReportPreviewProps) {
 
   const photoPages = paginateReportPhotos(photos);
 
+  const handleSavePdf = async () => {
+    if (isGeneratingPdf) {
+      return;
+    }
+
+    const validationError = validateReportForPdf(report, photos);
+
+    if (validationError) {
+      setPdfError(validationError);
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    setPdfError(null);
+
+    try {
+      const pdfBlob = await generateReportPdf(report, photos);
+      downloadReportPdf(pdfBlob, getReportPdfFilename(report));
+      setReport(await markReportFinished(report));
+    } catch {
+      setPdfError("Não foi possível gerar o PDF.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <main className={styles.previewScreen}>
-      <nav className={styles.previewNavigation} aria-label="Navegação da prévia">
+      <nav className={styles.previewNavigation} aria-label="Ações da prévia">
         <Link className={styles.backLink} href={reportLink}>← Voltar para o relatório</Link>
+        <button className={styles.savePdfButton} disabled={isGeneratingPdf} onClick={() => void handleSavePdf()} type="button">
+          {isGeneratingPdf ? "Gerando PDF..." : "Salvar PDF"}
+        </button>
       </nav>
+
+      {pdfError && <p className={styles.pdfError} role="status">{pdfError}</p>}
 
       <div className={styles.documentStack}>
         {photoPages.map((photoPage, index) => (

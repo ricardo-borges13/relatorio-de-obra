@@ -11,12 +11,17 @@ import {
   createDraftReport,
   getReportById,
   getReportFormValues,
+  markReportFinished,
   saveReport,
   touchReport,
 } from "@/lib/db/reports";
 import { formatBytes } from "@/lib/images/format-bytes";
 import { isSupportedImage, processImage } from "@/lib/images/process-image";
 import type { ProcessedImage } from "@/lib/images/types";
+import { downloadReportPdf } from "@/lib/pdf/download-report-pdf";
+import { getReportPdfFilename } from "@/lib/pdf/filename";
+import { generateReportPdf } from "@/lib/pdf/generate-report-pdf";
+import { validateReportForPdf } from "@/lib/pdf/validate-report-for-pdf";
 import type { Report, ReportFormValues } from "@/types/report";
 import type { ReportPhoto } from "@/types/report-photo";
 import Link from "next/link";
@@ -89,6 +94,8 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
 
   const revokePreviewUrl = (previewUrl: string) => {
@@ -451,6 +458,44 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
     router.push(`/relatorios/${reportRef.current.id}/preview`);
   };
 
+  const handleSavePdf = async () => {
+    if (!reportRef.current || isGeneratingPdf || isProcessing) {
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    setPdfError(null);
+    const changesSaved = await flushPendingChanges();
+    const reportToGenerate = reportRef.current;
+
+    if (!changesSaved || !reportToGenerate) {
+      setPdfError("Não foi possível salvar os dados antes de gerar o PDF.");
+      setIsGeneratingPdf(false);
+      return;
+    }
+
+    const validationError = validateReportForPdf(reportToGenerate, photosRef.current);
+
+    if (validationError) {
+      setPdfError(validationError);
+      setIsGeneratingPdf(false);
+      return;
+    }
+
+    try {
+      const pdfBlob = await generateReportPdf(reportToGenerate, photosRef.current);
+      downloadReportPdf(pdfBlob, getReportPdfFilename(reportToGenerate));
+      setCurrentReport(await markReportFinished(reportToGenerate));
+      setSaveStatus("saved");
+    } catch {
+      setPdfError("Não foi possível gerar o PDF.");
+    } finally {
+      if (isMountedRef.current) {
+        setIsGeneratingPdf(false);
+      }
+    }
+  };
+
   const saveStatusText = {
     saving: "Salvando...",
     saved: "Salvo neste dispositivo",
@@ -598,10 +643,15 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
           )}
         </section>
 
+        {pdfError && <p className={styles.pdfError} role="status">{pdfError}</p>}
+
         <div className={styles.finalActions}>
           <button className={styles.cancelButton} onClick={() => void handleCancel()} type="button">Cancelar</button>
-          <button className={styles.generateButton} disabled={isPreviewing || isProcessing} onClick={() => void handlePreview()} type="button">
+          <button className={styles.previewButton} disabled={isPreviewing || isProcessing || isGeneratingPdf} onClick={() => void handlePreview()} type="button">
             {isPreviewing ? "Salvando..." : "Visualizar relatório"}
+          </button>
+          <button className={styles.generateButton} disabled={isPreviewing || isProcessing || isGeneratingPdf} onClick={() => void handleSavePdf()} type="button">
+            {isGeneratingPdf ? "Gerando PDF..." : "Salvar PDF"}
           </button>
         </div>
       </main>
