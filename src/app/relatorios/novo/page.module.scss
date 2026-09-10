@@ -143,6 +143,16 @@
   gap: 12px;
 }
 
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
 .primaryPhotoAction,
 .secondaryPhotoAction,
 .generateButton,
@@ -158,6 +168,10 @@
   font-weight: 650;
   line-height: 1;
   cursor: pointer;
+}
+
+.capturePhotoAction {
+  display: none;
 }
 
 .primaryPhotoAction,
@@ -201,6 +215,108 @@
   }
 }
 
+.fileError {
+  margin-top: 14px;
+  color: #805236;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.photoCard {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.previewWrap {
+  display: flex;
+  aspect-ratio: 4 / 3;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--color-border);
+  background: #f0f1f0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.photoCardBody {
+  padding: 16px;
+
+  label {
+    display: block;
+    margin-top: 14px;
+    color: var(--color-text-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 76px;
+    margin-top: 7px;
+    padding: 10px 11px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    color: var(--color-text-primary);
+    background: var(--color-surface);
+    font: inherit;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    outline: none;
+    resize: vertical;
+
+    &:focus {
+      border-color: var(--color-action);
+      box-shadow: 0 0 0 3px rgb(38 54 62 / 13%);
+    }
+  }
+}
+
+.photoCardHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  h3 {
+    color: var(--color-text-primary);
+    font-size: 0.9375rem;
+    font-weight: 650;
+    line-height: 1.4;
+  }
+}
+
+.deletePhotoButton {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  color: #754c37;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+
+  &:hover {
+    color: #4b2e21;
+    text-decoration: underline;
+  }
+}
+
 .finalActions {
   display: flex;
   justify-content: flex-end;
@@ -239,6 +355,10 @@
     flex-direction: column;
   }
 
+  .capturePhotoAction {
+    display: inline-flex;
+  }
+
   .primaryPhotoAction,
   .secondaryPhotoAction,
   .generateButton,
@@ -258,5 +378,9 @@
 
   .photoEmptyState {
     min-height: 108px;
+  }
+
+  .photoGrid {
+    grid-template-columns: 1fr;
   }
 }
