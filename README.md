@@ -25,6 +25,18 @@ As imagens são validadas e processadas localmente no navegador: o maior lado é
 
 O relatório pode ser visualizado na rota de prévia ou salvo como PDF A4 diretamente na edição e na prévia. A geração usa `pdf-lib` inteiramente no navegador, com até quatro fotos na primeira página e seis nas páginas seguintes. O arquivo é gerado sob demanda, não fica armazenado na IndexedDB e recebe o nome `Relatorio_Obra_[NomeDaObra]_[AAAA-MM-DD].pdf`. Após uma geração bem-sucedida, o relatório passa de `draft` para `finished`. Compartilhamento ainda não está implementado.
 
+## Versionamento
+
+`package.json` é a fonte única da versão da aplicação. Antes de uma publicação relevante, altere manualmente somente o campo `version` e execute `npm run build`; o build expõe automaticamente esse valor ao frontend como `NEXT_PUBLIC_APP_VERSION`, centralizado em `APP_VERSION` (`src/lib/app-version.ts`).
+
+Ao carregar a aplicação, o navegador registra uma única mensagem informativa no console com a versão incorporada ao build. Não duplique manualmente a versão em componentes, arquivos de configuração ou variáveis `.env`.
+
+Procedimento de publicação:
+
+1. Atualize o campo `version` em `package.json`.
+2. Execute `npm run build`.
+3. Publique o conteúdo de `out/`.
+
 ## Persistência local
 
 A persistência utiliza `dexie` como abstração sobre IndexedDB, sem servidor ou API.

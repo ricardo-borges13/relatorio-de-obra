@@ -134,6 +134,10 @@ Verificar compatibilidade com a versão atual do Next.js antes de escolher bibli
 
 O projeto é publicado como exportação estática do Next.js (`output: "export"`) em Apache, sem runtime Node.js/Next.js em produção. A implementação atual utiliza `@serwist/next` e `serwist` no build de produção com Webpack para gerar o service worker físico `public/sw.js`, copiado para `out/sw.js`. O provider o registra em `/sw.js` com escopo `/`.
 
+### Versionamento
+
+`package.json` → `version` é a fonte única da versão. O build expõe esse valor como `NEXT_PUBLIC_APP_VERSION`, e os componentes devem reutilizar `APP_VERSION` de `src/lib/app-version.ts`; não duplicar a versão em componentes, configurações ou `.env`.
+
 - Cache Storage deve conter somente app shell, assets estáticos e rotas HTTP necessárias ao fluxo offline.
 - Relatórios, fotografias e blobs continuam exclusivamente na IndexedDB; não duplicar fotos no Cache Storage.
 - Não ativar o service worker em desenvolvimento e não forçar recarga automática quando houver atualização; a ativação pode ocorrer sem recarregar a página em uso.
