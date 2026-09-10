@@ -19,7 +19,7 @@ npm run build
 
 ## Estado atual
 
-O sistema possui Header responsivo com a logo local RIOW, Home e as rotas `/relatorios/novo`, `/relatorios/[id]` e `/relatorios/[id]/preview`. Relatórios novos começam como `draft`, exibem a data atual do dispositivo e podem permanecer incompletos. Um relatório aberto em `/relatorios/novo` permanece apenas em memória até receber conteúdo real em um campo ou uma fotografia; a data automática sozinha não cria um rascunho. Rascunhos totalmente vazios não são persistidos nem aparecem na Home. A Home lista os relatórios salvos por última atualização e permite continuar a edição.
+O sistema possui Header responsivo com a logo local RIOW, Home e as rotas estáticas `/relatorios/novo`, `/relatorios/editar?id=<id>` e `/relatorios/preview?id=<id>`. Relatórios novos começam como `draft`, exibem a data atual do dispositivo e podem permanecer incompletos. Um relatório aberto em `/relatorios/novo` permanece apenas em memória até receber conteúdo real em um campo ou uma fotografia; a data automática sozinha não cria um rascunho. Rascunhos totalmente vazios não são persistidos nem aparecem na Home. A Home lista os relatórios salvos por última atualização e permite continuar a edição.
 
 As imagens são validadas e processadas localmente no navegador: o maior lado é limitado a 1280 px e a versão JPEG gerada utiliza qualidade `0.80`. Apenas a fotografia otimizada e seus metadados são persistidos; previews usam Object URLs temporárias.
 
@@ -40,12 +40,13 @@ Os dados permanecem somente no navegador e dispositivo atuais. Eles não são si
 
 Compartilhamento ainda não está implementado. A geração local de PDF não envia fotos ou dados para servidores.
 
-## PWA e funcionamento offline
+## Publicação estática, PWA e funcionamento offline
 
-A aplicação é instalável como PWA em navegadores compatíveis. A implementação usa `@serwist/turbopack` com `serwist`, integração atual para Next.js App Router com Turbopack. O service worker é registrado apenas no build de produção; em desenvolvimento ele fica desativado para não persistir cache no `localhost`.
+A aplicação é instalável como PWA em navegadores compatíveis e usa `output: "export"` do Next.js. `npm run build` gera a pasta `out/`, pronta para publicação em Apache sem processo Node.js/Next.js em produção. Envie todo o conteúdo de `out/` para a raiz do document root de `https://obrasriow.invetec.com.br/`, inclusive `.htaccess`. A implementação usa `@serwist/next` com Webpack somente no build de produção; em desenvolvimento o worker fica desativado para não persistir cache no `localhost`.
 
 - O manifest declara o nome, ícones RIOW de 192 px e 512 px (também maskable), modo `standalone`, idioma `pt-BR` e cores da aplicação.
-- O shell da aplicação, a Home, `/relatorios/novo`, fallback offline, logo, ícones e assets de build são precacheados. Rotas de edição e prévia já visitadas são armazenadas pelo cache de navegação, sem manter uma lista fixa de IDs.
+- O service worker é gerado fisicamente como `out/sw.js`, registrado em `/sw.js` e possui escopo `/`. O `.htaccess` exportado define `Service-Worker-Allowed: /`, impede cache persistente do worker e converte URLs estáticas sem extensão, como `/relatorios/novo`, nos respectivos arquivos `.html`. O Apache precisa ter `mod_rewrite`, `mod_headers` e `AllowOverride FileInfo` habilitados.
+- O shell da aplicação, Home, páginas estáticas de novo relatório, edição, prévia, fallback offline, logo, ícones e assets de build são precacheados. O identificador do relatório permanece na query string; nenhum ID precisa existir como rota física no build.
 - Cache Storage guarda somente shell, JavaScript, CSS, fontes e assets HTTP. Relatórios, fotos e blobs não são duplicados no cache: continuam exclusivamente em `riowReportsDB` (IndexedDB).
 - Após o primeiro carregamento sob controle do service worker, o fluxo local pode operar offline: Home, novo relatório, edição e prévia de rotas já visitadas, autosave, seleção/captura local de fotos quando suportada pelo dispositivo, e geração/download local de PDF.
 - Atualizações ativam o novo worker sem recarregar a página em uso nem limpar a IndexedDB. O precache gerado no novo build substitui versões antigas de assets automaticamente.
@@ -56,9 +57,9 @@ No Android, Chrome pode oferecer a instalação quando os requisitos do navegado
 
 ### Como testar offline
 
-1. Execute `npm run build` e sirva a build de produção com `npm run start` em HTTPS (ou use `localhost` para inspeção local).
+1. Execute `npm run build` e sirva a pasta `out/` com um servidor estático em HTTPS (ou use `localhost` para inspeção local); não use `next start`.
 2. Abra a Home, crie/edite um relatório, visite a prévia e confirme o autosave.
-3. Em DevTools, confira o Manifest, o worker em Service Workers, os assets em Cache Storage e os dados em IndexedDB.
+3. Em DevTools, confira o Manifest, o worker `/sw.js` com escopo `/`, os assets em Cache Storage e os dados em IndexedDB.
 4. Marque a rede como Offline e recarregue a Home, uma edição/prévia já visitada e `/relatorios/novo`; gere um PDF de um relatório salvo.
 
 Durante o desenvolvimento, o provider desativa o worker. Caso tenha testado uma build de produção no mesmo host, remova o registro em DevTools → Application → Service Workers e limpe os caches em DevTools → Application → Storage antes de voltar ao modo de desenvolvimento.

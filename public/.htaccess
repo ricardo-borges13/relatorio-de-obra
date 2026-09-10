@@ -1,0 +1,40 @@
+Options -Indexes
+
+DirectoryIndex index.html
+
+AddType application/manifest+json .webmanifest
+
+<IfModule mod_headers.c>
+
+    <Files "sw.js">
+        Header always set Cache-Control "no-cache, no-store, must-revalidate"
+        Header always set Service-Worker-Allowed "/"
+    </Files>
+
+    <FilesMatch "\.(?:html|webmanifest)$">
+        Header always set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+
+    <FilesMatch "\.(?:js|css|woff2?)$">
+        Header always set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    <FilesMatch "\.(?:png|jpg|jpeg|webp|svg|ico)$">
+        Header always set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+
+</IfModule>
+
+<IfModule mod_rewrite.c>
+
+    RewriteEngine On
+    RewriteBase /
+
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+    RewriteRule ^(.+)/?$ /$1.html [L]
+
+</IfModule>

@@ -85,7 +85,7 @@ export default function ReportPreview({ reportId }: ReportPreviewProps) {
     };
   }, [reportId]);
 
-  const reportLink = `/relatorios/${reportId}`;
+  const reportLink = `/relatorios/editar?id=${encodeURIComponent(reportId)}`;
 
   if (isLoading) {
     return (

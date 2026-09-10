@@ -193,7 +193,14 @@ export default function Home() {
             <div className={styles.reportList}>
               {reports.map((report) => (
                 <article className={`${styles.reportCard} ${styles[`reportCard${report.status}`]}`} key={report.id}>
-                  <Link className={styles.reportCardLink} href={report.status === "finished" ? `/relatorios/${report.id}/preview` : `/relatorios/${report.id}`}>
+                  <Link
+                    className={styles.reportCardLink}
+                    href={
+                      report.status === "finished"
+                        ? `/relatorios/preview?id=${encodeURIComponent(report.id)}`
+                        : `/relatorios/editar?id=${encodeURIComponent(report.id)}`
+                    }
+                  >
                     <div>
                       <p className={styles.reportService}>{getReportTitle(report)}</p>
                       <p className={styles.reportDetails}>{getReportDetails(report)}</p>
@@ -231,7 +238,11 @@ export default function Home() {
                       <div className={styles.reportMenu} role="menu">
                         <Link
                           className={styles.reportMenuItem}
-                          href={report.status === "finished" ? `/relatorios/${report.id}/preview` : `/relatorios/${report.id}`}
+                          href={
+                            report.status === "finished"
+                              ? `/relatorios/preview?id=${encodeURIComponent(report.id)}`
+                              : `/relatorios/editar?id=${encodeURIComponent(report.id)}`
+                          }
                           onClick={(event) => {
                             event.stopPropagation();
                             setOpenMenuId(null);

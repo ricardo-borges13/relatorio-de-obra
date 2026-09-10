@@ -1,6 +1,6 @@
 "use client";
 
-import { SerwistProvider } from "@serwist/turbopack/react";
+import { SerwistProvider } from "@serwist/next/react";
 import type { ReactNode } from "react";
 
 interface PwaProviderProps {
@@ -12,8 +12,9 @@ export default function PwaProvider({ children }: PwaProviderProps) {
     <SerwistProvider
       cacheOnNavigation
       disable={process.env.NODE_ENV !== "production"}
+      options={{ scope: "/" }}
       reloadOnOnline={false}
-      swUrl="/serwist/sw.js"
+      swUrl="/sw.js"
     >
       {children}
     </SerwistProvider>

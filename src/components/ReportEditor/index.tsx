@@ -551,7 +551,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
       return;
     }
 
-    router.push(`/relatorios/${reportRef.current.id}/preview`);
+    router.push(`/relatorios/preview?id=${encodeURIComponent(reportRef.current.id)}`);
   };
 
   const handleSavePdf = async () => {

@@ -132,11 +132,13 @@ Verificar compatibilidade com a versão atual do Next.js antes de escolher bibli
 
 ### Implementação atual de PWA
 
-Quando a PWA for implementada, preferir a integração compatível com o bundler ativo do Next.js. A implementação atual utiliza `@serwist/turbopack` e `serwist` para gerar o service worker no build de produção, preservando o App Router e Turbopack.
+O projeto é publicado como exportação estática do Next.js (`output: "export"`) em Apache, sem runtime Node.js/Next.js em produção. A implementação atual utiliza `@serwist/next` e `serwist` no build de produção com Webpack para gerar o service worker físico `public/sw.js`, copiado para `out/sw.js`. O provider o registra em `/sw.js` com escopo `/`.
 
 - Cache Storage deve conter somente app shell, assets estáticos e rotas HTTP necessárias ao fluxo offline.
 - Relatórios, fotografias e blobs continuam exclusivamente na IndexedDB; não duplicar fotos no Cache Storage.
 - Não ativar o service worker em desenvolvimento e não forçar recarga automática quando houver atualização; a ativação pode ocorrer sem recarregar a página em uso.
+- Publicar todo o conteúdo de `out/`, inclusive `.htaccess`. O Apache deve ter `mod_rewrite`, `mod_headers` e `AllowOverride FileInfo` para servir rotas estáticas sem extensão e os cabeçalhos do worker.
+- Relatórios existentes usam páginas físicas estáticas com identificador na query string: `/relatorios/editar?id=<id>` e `/relatorios/preview?id=<id>`. Não recriar rotas dinâmicas baseadas no ID sem avaliar a compatibilidade com a exportação estática.
 
 ---
 
