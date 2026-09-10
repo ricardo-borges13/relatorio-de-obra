@@ -1,6 +1,9 @@
 "use client";
 
 import Header from "@/components/Header";
+import { formatBytes } from "@/lib/images/format-bytes";
+import { isSupportedImage, processImage } from "@/lib/images/process-image";
+import type { ImageDiagnostics, ProcessedImage } from "@/lib/images/types";
 import Link from "next/link";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import styles from "./page.module.scss";
@@ -11,6 +14,7 @@ interface TemporaryPhoto {
   previewUrl: string;
   description: string;
   order: number;
+  diagnostics: ImageDiagnostics;
 }
 
 const createPhotoId = () =>
@@ -22,43 +26,66 @@ export default function NewReportPage() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewUrlsRef = useRef(new Set<string>());
+  const isMountedRef = useRef(true);
   const [photos, setPhotos] = useState<TemporaryPhoto[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(
-    () => () => {
-      previewUrlsRef.current.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
-      previewUrlsRef.current.clear();
-    },
-    [],
-  );
+  useEffect(() => {
+    isMountedRef.current = true;
+    const previewUrls = previewUrlsRef.current;
 
-  const handlePhotoSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    return () => {
+      isMountedRef.current = false;
+      previewUrls.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+      previewUrls.clear();
+    };
+  }, []);
+
+  const handlePhotoSelection = async (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files ?? []);
-    const imageFiles = selectedFiles.filter((file) => file.type.startsWith("image/"));
 
     event.currentTarget.value = "";
 
-    if (imageFiles.length === 0) {
+    if (selectedFiles.length === 0) {
       setFileError(null);
-
-      if (selectedFiles.length > 0) {
-        setFileError("Selecione apenas arquivos de imagem.");
-      }
-
       return;
     }
 
-    const newPhotos = imageFiles.map((file) => {
-      const previewUrl = URL.createObjectURL(file);
+    setIsProcessing(true);
+    setFileError(null);
+
+    const processedImages: ProcessedImage[] = [];
+    let ignoredFiles = 0;
+
+    for (const file of selectedFiles) {
+      if (!isSupportedImage(file)) {
+        ignoredFiles += 1;
+        continue;
+      }
+
+      try {
+        processedImages.push(await processImage(file));
+      } catch {
+        ignoredFiles += 1;
+      }
+    }
+
+    if (!isMountedRef.current) {
+      return;
+    }
+
+    const newPhotos = processedImages.map((processedImage) => {
+      const previewUrl = URL.createObjectURL(processedImage.file);
       previewUrlsRef.current.add(previewUrl);
 
       return {
         id: createPhotoId(),
-        file,
+        file: processedImage.file,
         previewUrl,
         description: "",
         order: 0,
+        diagnostics: processedImage.diagnostics,
       };
     });
 
@@ -69,9 +96,16 @@ export default function NewReportPage() {
         order: currentPhotos.length + index,
       })),
     ]);
-    setFileError(
-      imageFiles.length < selectedFiles.length ? "Arquivos que não são imagens foram ignorados." : null,
-    );
+
+    if (ignoredFiles > 0) {
+      setFileError(
+        processedImages.length > 0
+          ? "Algumas imagens não puderam ser processadas e foram ignoradas."
+          : "Não foi possível processar as imagens selecionadas.",
+      );
+    }
+
+    setIsProcessing(false);
   };
 
   const handleDescriptionChange = (photoId: string, description: string) => {
@@ -168,6 +202,7 @@ export default function NewReportPage() {
               accept="image/*"
               capture="environment"
               className={styles.visuallyHidden}
+              disabled={isProcessing}
               onChange={handlePhotoSelection}
               ref={cameraInputRef}
               type="file"
@@ -175,6 +210,7 @@ export default function NewReportPage() {
             <input
               accept="image/*"
               className={styles.visuallyHidden}
+              disabled={isProcessing}
               multiple
               onChange={handlePhotoSelection}
               ref={fileInputRef}
@@ -182,17 +218,19 @@ export default function NewReportPage() {
             />
             <button
               className={`${styles.primaryPhotoAction} ${styles.capturePhotoAction}`}
+              disabled={isProcessing}
               onClick={() => cameraInputRef.current?.click()}
               type="button"
             >
-              Tirar foto
+              {isProcessing ? "Processando fotos..." : "Tirar foto"}
             </button>
             <button
               className={styles.secondaryPhotoAction}
+              disabled={isProcessing}
               onClick={() => fileInputRef.current?.click()}
               type="button"
             >
-              Selecionar fotos
+              {isProcessing ? "Processando fotos..." : "Selecionar fotos"}
             </button>
           </div>
 
@@ -222,6 +260,14 @@ export default function NewReportPage() {
                       >
                         Excluir
                       </button>
+                    </div>
+                    <div className={styles.photoDiagnostics}>
+                      <p>
+                        Original: {photo.diagnostics.originalWidth} × {photo.diagnostics.originalHeight} • {formatBytes(photo.diagnostics.originalSize)}
+                      </p>
+                      <p>
+                        Otimizada: {photo.diagnostics.optimizedWidth} × {photo.diagnostics.optimizedHeight} • {formatBytes(photo.diagnostics.optimizedSize)}
+                      </p>
                     </div>
                     <label htmlFor={`photo-description-${photo.id}`}>Descrição da foto</label>
                     <textarea
