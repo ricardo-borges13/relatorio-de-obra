@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">RIOW</title>
+  <rect width="512" height="512" fill="#26363e"/>
+  <g fill="#fff">
+    <path d="M99 360V215l91-103h42v145l-91 103z"/>
+    <path d="M205 360V215l91-103h42v145l-91 103z"/>
+    <path d="M311 360V215l91-103h42v145l-91 103z"/>
+  </g>
+</svg>

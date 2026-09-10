@@ -746,7 +746,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
         {pdfError && <p className={styles.pdfError} role="status">{pdfError}</p>}
 
         <div className={styles.finalActions}>
-          <button className={styles.cancelButton} onClick={() => void handleCancel()} type="button">Cancelar</button>
+          <button className={styles.cancelButton} onClick={() => void handleCancel()} type="button">Sair</button>
           <button className={styles.previewButton} disabled={isPreviewing || isProcessing || isGeneratingPdf} onClick={() => void handlePreview()} type="button">
             {isPreviewing ? "Salvando..." : "Visualizar relatório"}
           </button>

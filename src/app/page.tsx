@@ -164,7 +164,7 @@ export default function Home() {
           <div className={styles.introductionCopy}>
             <h1 id="page-title">Relatórios de Obra</h1>
             <p className={styles.description}>
-              Registre serviços terceirizados executados na obra e gere relatórios fotográficos profissionais.
+              Registre serviços executados na obra e gere relatórios fotográficos profissionais.
             </p>
             <Link className={styles.newReportButton} href="/relatorios/novo">
               <span aria-hidden="true">+</span>
@@ -290,7 +290,7 @@ export default function Home() {
                 ref={cancelDeleteButtonRef}
                 type="button"
               >
-                Cancelar
+                Sair
               </button>
               <button
                 className={styles.modalDeleteButton}

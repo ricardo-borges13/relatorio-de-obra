@@ -38,6 +38,31 @@ A persistência utiliza `dexie` como abstração sobre IndexedDB, sem servidor o
 
 Os dados permanecem somente no navegador e dispositivo atuais. Eles não são sincronizados entre navegadores, celulares, notebooks ou computadores. Limpar os dados do site pode remover a IndexedDB e os relatórios; ela não deve ser tratada como backup definitivo.
 
-PWA e compartilhamento de PDF ainda não foram implementados. A geração local de PDF não envia fotos ou dados para servidores.
+Compartilhamento ainda não está implementado. A geração local de PDF não envia fotos ou dados para servidores.
+
+## PWA e funcionamento offline
+
+A aplicação é instalável como PWA em navegadores compatíveis. A implementação usa `@serwist/turbopack` com `serwist`, integração atual para Next.js App Router com Turbopack. O service worker é registrado apenas no build de produção; em desenvolvimento ele fica desativado para não persistir cache no `localhost`.
+
+- O manifest declara o nome, ícones RIOW de 192 px e 512 px (também maskable), modo `standalone`, idioma `pt-BR` e cores da aplicação.
+- O shell da aplicação, a Home, `/relatorios/novo`, fallback offline, logo, ícones e assets de build são precacheados. Rotas de edição e prévia já visitadas são armazenadas pelo cache de navegação, sem manter uma lista fixa de IDs.
+- Cache Storage guarda somente shell, JavaScript, CSS, fontes e assets HTTP. Relatórios, fotos e blobs não são duplicados no cache: continuam exclusivamente em `riowReportsDB` (IndexedDB).
+- Após o primeiro carregamento sob controle do service worker, o fluxo local pode operar offline: Home, novo relatório, edição e prévia de rotas já visitadas, autosave, seleção/captura local de fotos quando suportada pelo dispositivo, e geração/download local de PDF.
+- Atualizações ativam o novo worker sem recarregar a página em uso nem limpar a IndexedDB. O precache gerado no novo build substitui versões antigas de assets automaticamente.
+
+Para a instalação e o service worker funcionarem plenamente em produção, a aplicação deve ser servida em HTTPS. `localhost` é uma exceção segura para desenvolvimento; um IP local em HTTP pode não disponibilizar instalação ou service worker.
+
+No Android, Chrome pode oferecer a instalação quando os requisitos do navegador forem atendidos. Em Chrome e Edge desktop, a instalação também é oferecida pelo navegador quando suportada. No iPhone/iPad, use o fluxo nativo do Safari de adicionar à Tela de Início; não há botão próprio de instalação nesta etapa.
+
+### Como testar offline
+
+1. Execute `npm run build` e sirva a build de produção com `npm run start` em HTTPS (ou use `localhost` para inspeção local).
+2. Abra a Home, crie/edite um relatório, visite a prévia e confirme o autosave.
+3. Em DevTools, confira o Manifest, o worker em Service Workers, os assets em Cache Storage e os dados em IndexedDB.
+4. Marque a rede como Offline e recarregue a Home, uma edição/prévia já visitada e `/relatorios/novo`; gere um PDF de um relatório salvo.
+
+Durante o desenvolvimento, o provider desativa o worker. Caso tenha testado uma build de produção no mesmo host, remova o registro em DevTools → Application → Service Workers e limpe os caches em DevTools → Application → Storage antes de voltar ao modo de desenvolvimento.
+
+Não há backend, API, sincronização, background sync, notificações push, analytics, telemetria ou Web Share nesta etapa.
 
 O projeto utiliza TypeScript, SCSS Modules e as dependências `dexie`, `pdf-lib`, `sass`, `typescript`, `@types/react` e `@types/node`. A geração fica isolada em `src/lib/pdf/`. Os estilos globais ficam em `src/app/globals.scss`; os estilos da página e do Header usam SCSS Modules, junto aos respectivos componentes.

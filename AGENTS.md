@@ -130,6 +130,14 @@ Não implementar a PWA de forma improvisada.
 
 Verificar compatibilidade com a versão atual do Next.js antes de escolher bibliotecas ou estratégias.
 
+### Implementação atual de PWA
+
+Quando a PWA for implementada, preferir a integração compatível com o bundler ativo do Next.js. A implementação atual utiliza `@serwist/turbopack` e `serwist` para gerar o service worker no build de produção, preservando o App Router e Turbopack.
+
+- Cache Storage deve conter somente app shell, assets estáticos e rotas HTTP necessárias ao fluxo offline.
+- Relatórios, fotografias e blobs continuam exclusivamente na IndexedDB; não duplicar fotos no Cache Storage.
+- Não ativar o service worker em desenvolvimento e não forçar recarga automática quando houver atualização; a ativação pode ocorrer sem recarregar a página em uso.
+
 ---
 
 ## 7. Responsividade
