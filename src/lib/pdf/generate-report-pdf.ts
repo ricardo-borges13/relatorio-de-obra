@@ -12,6 +12,7 @@ interface EmbeddedPhoto {
 const textColor = rgb(32 / 255, 36 / 255, 37 / 255);
 const mutedColor = rgb(108 / 255, 115 / 255, 113 / 255);
 const lineColor = rgb(207 / 255, 211 / 255, 209 / 255);
+const headerLineColor = rgb(223 / 255, 226 / 255, 224 / 255);
 const subtleLineColor = rgb(225 / 255, 228 / 255, 226 / 255);
 const photoBackground = rgb(242 / 255, 243 / 255, 242 / 255);
 const contentWidth = PDF_PAGE.width - PDF_PAGE.marginX * 2;
@@ -156,28 +157,46 @@ const drawPhotoGrid = (
   page: PDFPage,
   photos: EmbeddedPhoto[],
   startY: number,
-  bottomY: number,
   rows: number,
   regular: PDFFont,
   bold: PDFFont,
 ) => {
   const gap = 12;
   const columnWidth = (contentWidth - gap) / 2;
-  const gridHeight = startY - bottomY;
-  const rowHeight = (gridHeight - gap * (rows - 1)) / rows;
+  const frameHeight = columnWidth * 9 / 16;
+  const preparedPhotos = photos.map(({ photo, image }) => {
+    const description = photo.description.trim();
+    const descriptionLines = description ? wrapText(description, regular, 6.2, columnWidth - 16) : [];
 
-  photos.forEach(({ photo, image }, index) => {
+    return {
+      photo,
+      image,
+      descriptionLines,
+      captionHeight: 20 + descriptionLines.length * 8,
+    };
+  });
+  const rowHeights = Array.from({ length: rows }, (_, row) => {
+    const rowPhotos = preparedPhotos.slice(row * 2, row * 2 + 2);
+
+    return rowPhotos.length > 0
+      ? frameHeight + Math.max(...rowPhotos.map(({ captionHeight }) => captionHeight))
+      : 0;
+  });
+  const rowTopPositions = rowHeights.reduce<number[]>((positions, rowHeight, row) => {
+    positions.push(row === 0 ? startY : positions[row - 1] - rowHeights[row - 1] - gap);
+
+    return positions;
+  }, []);
+
+  preparedPhotos.forEach(({ photo, image, descriptionLines, captionHeight }, index) => {
     const row = Math.floor(index / 2);
     const column = index % 2;
     const x = PDF_PAGE.marginX + column * (columnWidth + gap);
-    const top = startY - row * (rowHeight + gap);
-    const description = photo.description.trim();
-    const descriptionLines = description ? wrapText(description, regular, 6.2, columnWidth - 16) : [];
-    const captionHeight = 20 + descriptionLines.length * 8;
-    const frameHeight = Math.max(18, rowHeight - captionHeight);
+    const top = rowTopPositions[row];
+    const cardHeight = frameHeight + captionHeight;
     const frameY = top - frameHeight;
 
-    page.drawRectangle({ x, y: top - rowHeight, width: columnWidth, height: rowHeight, borderColor: lineColor, borderWidth: 0.7 });
+    page.drawRectangle({ x, y: top - cardHeight, width: columnWidth, height: cardHeight, borderColor: lineColor, borderWidth: 0.7 });
     page.drawRectangle({ x, y: frameY, width: columnWidth, height: frameHeight, color: photoBackground });
     page.drawImage(image, { x, y: frameY, width: columnWidth, height: frameHeight });
     page.drawLine({ start: { x, y: frameY }, end: { x: x + columnWidth, y: frameY }, thickness: 0.5, color: subtleLineColor });
@@ -220,13 +239,20 @@ export const generateReportPdf = async (report: Report, reportPhotos: ReportPhot
       const title = "Relatório de Obra";
       page.drawText(title, { x: PDF_PAGE.width - PDF_PAGE.marginX - bold.widthOfTextAtSize(title, 17), y: PDF_PAGE.height - PDF_PAGE.marginTop - 24, font: bold, size: 17, color: textColor });
       const headerLineY = PDF_PAGE.height - PDF_PAGE.marginTop - 42;
-      page.drawLine({ start: { x: PDF_PAGE.marginX, y: headerLineY }, end: { x: PDF_PAGE.width - PDF_PAGE.marginX, y: headerLineY }, thickness: 0.8, color: lineColor });
+      page.drawLine({ start: { x: PDF_PAGE.marginX, y: headerLineY }, end: { x: PDF_PAGE.width - PDF_PAGE.marginX, y: headerLineY }, thickness: 0.6, color: headerLineColor });
       const descriptionY = drawServiceData(page, report, regular, bold, headerLineY - 24);
       page.drawText("DESCRIÇÃO DO SERVIÇO", { x: PDF_PAGE.marginX, y: descriptionY, font: bold, size: 8, color: textColor });
       const descriptionLines = wrapText(report.serviceDescription.trim(), regular, 7.5, contentWidth);
-      photoStartY = drawLines(page, descriptionLines, PDF_PAGE.marginX, descriptionY - 14, regular, 7.5, 10.5) - 16;
-      page.drawText("REGISTRO FOTOGRÁFICO", { x: PDF_PAGE.marginX, y: photoStartY, font: bold, size: 8, color: textColor });
-      photoStartY -= 14;
+      photoStartY = drawLines(page, descriptionLines, PDF_PAGE.marginX, descriptionY - 14, regular, 7.5, 10.5) - 22;
+      const photoSectionTitle = "REGISTRO FOTOGRÁFICO";
+      page.drawText(photoSectionTitle, {
+        x: PDF_PAGE.marginX + (contentWidth - bold.widthOfTextAtSize(photoSectionTitle, 8)) / 2,
+        y: photoStartY,
+        font: bold,
+        size: 8,
+        color: textColor,
+      });
+      photoStartY -= 18;
     } else {
       const logoWidth = 80;
       const logoHeight = logo.height * (logoWidth / logo.width);
@@ -235,11 +261,11 @@ export const generateReportPdf = async (report: Report, reportPhotos: ReportPhot
       const title = "Relatório de Obra";
       page.drawText(title, { x: PDF_PAGE.width - PDF_PAGE.marginX - bold.widthOfTextAtSize(title, 8), y: PDF_PAGE.height - PDF_PAGE.marginTop - 15, font: bold, size: 8, color: textColor });
       const headerLineY = PDF_PAGE.height - PDF_PAGE.marginTop - 32;
-      page.drawLine({ start: { x: PDF_PAGE.marginX, y: headerLineY }, end: { x: PDF_PAGE.width - PDF_PAGE.marginX, y: headerLineY }, thickness: 0.8, color: lineColor });
+      page.drawLine({ start: { x: PDF_PAGE.marginX, y: headerLineY }, end: { x: PDF_PAGE.width - PDF_PAGE.marginX, y: headerLineY }, thickness: 0.6, color: headerLineColor });
       photoStartY = headerLineY - 18;
     }
 
-    drawPhotoGrid(page, photos, photoStartY, PDF_PAGE.marginBottom + 25, photoPage.isFirstPage ? 2 : 3, regular, bold);
+    drawPhotoGrid(page, photos, photoStartY, photoPage.isFirstPage ? 2 : 3, regular, bold);
     drawFooter(page, pageNumber, photoPages.length, regular);
   });
 

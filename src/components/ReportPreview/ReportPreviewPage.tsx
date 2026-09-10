@@ -59,7 +59,9 @@ export default function ReportPreviewPage({
   const serviceDescription = report.serviceDescription.trim();
 
   return (
-    <article className={`${styles.a4Page} ${isFirstPage ? styles.firstPage : styles.followingPage}`}>
+    <article
+      className={`${styles.a4Page} ${isFirstPage ? styles.firstPage : styles.followingPage}`}
+    >
       <div className={styles.pageBody}>
         {isFirstPage ? (
           <>
@@ -79,24 +81,46 @@ export default function ReportPreviewPage({
             </header>
 
             {hasServiceData && (
-              <section className={styles.serviceDataSection} aria-label="Dados do serviço">
-                <h2>Dados do serviço</h2>
+              <section
+                className={styles.serviceDataSection}
+                aria-label="Dados do serviço"
+              >
+                <h2 >Dados do serviço</h2>
                 <dl className={styles.serviceDataList}>
                   <div className={styles.serviceDataColumn}>
                     <ServiceData label="Obra" value={report.workName} />
-                    <ServiceData label="Engenheiro responsável" value={report.engineer} />
-                    <ServiceData label="Data" value={hasContent(report.serviceDate) ? formatServiceDate(report.serviceDate) : undefined} />
+                    <ServiceData
+                      label="Engenheiro responsável"
+                      value={report.engineer}
+                    />
+                    <ServiceData
+                      label="Data"
+                      value={
+                        hasContent(report.serviceDate)
+                          ? formatServiceDate(report.serviceDate)
+                          : undefined
+                      }
+                    />
                   </div>
                   <div className={styles.serviceDataColumn}>
-                    <ServiceData label="Empresa terceirizada" value={report.contractor} />
-                    <ServiceData label="Local / setor" value={report.location} />
+                    <ServiceData
+                      label="Empresa terceirizada"
+                      value={report.contractor}
+                    />
+                    <ServiceData
+                      label="Local / setor"
+                      value={report.location}
+                    />
                   </div>
                 </dl>
               </section>
             )}
 
             {serviceDescription && (
-              <section className={styles.descriptionSection} aria-label="Descrição do serviço">
+              <section
+                className={styles.descriptionSection}
+                aria-label="Descrição do serviço"
+              >
                 <h2>Descrição do serviço</h2>
                 <p>{serviceDescription}</p>
               </section>
@@ -115,11 +139,22 @@ export default function ReportPreviewPage({
           </header>
         )}
 
-        <section className={styles.photoSection} aria-label="Registro fotográfico">
-          {isFirstPage && <h2 className={styles.photoSectionTitle}>Registro Fotográfico</h2>}
-          <div className={`${styles.photoGrid} ${isFirstPage ? styles.firstPagePhotoGrid : styles.followingPagePhotoGrid}`}>
+        <section
+          className={styles.photoSection}
+          aria-label="Registro fotográfico"
+        >
+          {isFirstPage && (
+            <h2 className={styles.photoSectionTitle}>Registro Fotográfico</h2>
+          )}
+          <div
+            className={`${styles.photoGrid} ${isFirstPage ? styles.firstPagePhotoGrid : styles.followingPagePhotoGrid}`}
+          >
             {photos.map((photo) => (
-              <PhotoPreviewItem key={photo.id} photo={photo} previewUrl={photo.previewUrl} />
+              <PhotoPreviewItem
+                key={photo.id}
+                photo={photo}
+                previewUrl={photo.previewUrl}
+              />
             ))}
           </div>
         </section>
@@ -127,7 +162,9 @@ export default function ReportPreviewPage({
 
       <footer className={styles.pageFooter}>
         <span>RIOW | Relatório de Obra</span>
-        <span>Página {pageNumber} de {totalPages}</span>
+        <span>
+          Página {pageNumber} de {totalPages}
+        </span>
       </footer>
     </article>
   );

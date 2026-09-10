@@ -9,7 +9,7 @@ import styles from "./page.module.scss";
 
 const formatServiceDate = (serviceDate: string) => {
   if (!serviceDate) {
-    return "Data não informada";
+    return null;
   }
 
   const [year, month, day] = serviceDate.split("-");
@@ -22,6 +22,18 @@ const statusLabel = {
   finished: "Finalizado",
 } as const;
 
+const getReportTitle = (report: Report) =>
+  report.serviceDescription.trim() || "Rascunho em andamento";
+
+const getReportDetails = (report: Report) => {
+  const details = [
+    report.workName.trim() || "Preenchimento ainda não concluído",
+    formatServiceDate(report.serviceDate),
+  ].filter((detail): detail is string => Boolean(detail));
+
+  return details.join(" • ");
+};
+
 export default function Home() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +43,8 @@ export default function Home() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
+  const openMenuWrapRef = useRef<HTMLDivElement>(null);
+  const menuButtonRefs = useRef(new Map<string, HTMLButtonElement>());
 
   useEffect(() => {
     let isCurrent = true;
@@ -72,13 +86,34 @@ export default function Home() {
         return;
       }
 
-      setOpenMenuId(null);
+      if (openMenuId) {
+        setOpenMenuId(null);
+        menuButtonRefs.current.get(openMenuId)?.focus();
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
 
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isDeleting, reportToDelete]);
+  }, [isDeleting, openMenuId, reportToDelete]);
+
+  useEffect(() => {
+    if (!openMenuId) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && openMenuWrapRef.current?.contains(event.target)) {
+        return;
+      }
+
+      setOpenMenuId(null);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [openMenuId]);
 
   useEffect(() => {
     if (reportToDelete) {
@@ -157,28 +192,36 @@ export default function Home() {
           ) : (
             <div className={styles.reportList}>
               {reports.map((report) => (
-                <article className={styles.reportCard} key={report.id}>
-                  <Link className={styles.reportCardLink} href={`/relatorios/${report.id}`}>
+                <article className={`${styles.reportCard} ${styles[`reportCard${report.status}`]}`} key={report.id}>
+                  <Link className={styles.reportCardLink} href={report.status === "finished" ? `/relatorios/${report.id}/preview` : `/relatorios/${report.id}`}>
                     <div>
-                      <p className={styles.reportService}>
-                        {report.serviceDescription || "Serviço sem descrição"}
-                      </p>
-                      <p className={styles.reportDetails}>
-                        {report.workName || "Obra não informada"} • {formatServiceDate(report.serviceDate)}
-                      </p>
+                      <p className={styles.reportService}>{getReportTitle(report)}</p>
+                      <p className={styles.reportDetails}>{getReportDetails(report)}</p>
                     </div>
                     <span className={`${styles.statusBadge} ${styles[`status${report.status}`]}`}>
                       {statusLabel[report.status]}
                     </span>
                   </Link>
 
-                  <div className={styles.reportMenuWrap}>
+                  <div className={styles.reportMenuWrap} ref={openMenuId === report.id ? openMenuWrapRef : undefined}>
                     <button
                       aria-expanded={openMenuId === report.id}
                       aria-haspopup="menu"
                       aria-label={`Opções do relatório ${report.workName || report.id}`}
                       className={styles.reportMenuButton}
-                      onClick={() => setOpenMenuId((currentId) => (currentId === report.id ? null : report.id))}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setOpenMenuId((currentId) => (currentId === report.id ? null : report.id));
+                      }}
+                      ref={(element) => {
+                        if (element) {
+                          menuButtonRefs.current.set(report.id, element);
+                          return;
+                        }
+
+                        menuButtonRefs.current.delete(report.id);
+                      }}
                       type="button"
                     >
                       <span aria-hidden="true">⋮</span>
@@ -188,15 +231,21 @@ export default function Home() {
                       <div className={styles.reportMenu} role="menu">
                         <Link
                           className={styles.reportMenuItem}
-                          href={`/relatorios/${report.id}`}
-                          onClick={() => setOpenMenuId(null)}
+                          href={report.status === "finished" ? `/relatorios/${report.id}/preview` : `/relatorios/${report.id}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setOpenMenuId(null);
+                          }}
                           role="menuitem"
                         >
-                          {report.status === "draft" ? "Editar" : "Visualizar"}
+                          {report.status === "finished" ? "Visualizar" : "Editar"}
                         </Link>
                         <button
                           className={`${styles.reportMenuItem} ${styles.deleteMenuItem}`}
-                          onClick={() => openDeleteConfirmation(report)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openDeleteConfirmation(report);
+                          }}
                           role="menuitem"
                           type="button"
                         >

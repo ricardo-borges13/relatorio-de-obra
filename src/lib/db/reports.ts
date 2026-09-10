@@ -14,6 +14,21 @@ export const getReportFormValues = (report: Report): ReportFormValues => ({
   serviceDescription: report.serviceDescription,
 });
 
+export const createUnsavedDraftReport = (id: string): Report => {
+  const timestamp = createTimestamp();
+
+  return {
+    id,
+    workName: "",
+    engineer: "",
+    serviceDate: "",
+    serviceDescription: "",
+    status: "draft",
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+};
+
 export const createDraftReport = async (id: string): Promise<Report> => {
   return database.transaction("rw", database.reports, async () => {
     const existingReport = await database.reports.get(id);
@@ -22,17 +37,7 @@ export const createDraftReport = async (id: string): Promise<Report> => {
       return existingReport;
     }
 
-    const timestamp = createTimestamp();
-    const report: Report = {
-      id,
-      workName: "",
-      engineer: "",
-      serviceDate: "",
-      serviceDescription: "",
-      status: "draft",
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
+    const report = createUnsavedDraftReport(id);
 
     await database.reports.add(report);
 

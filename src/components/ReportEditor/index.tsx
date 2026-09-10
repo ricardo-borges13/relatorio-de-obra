@@ -9,6 +9,7 @@ import {
 } from "@/lib/db/photos";
 import {
   createDraftReport,
+  createUnsavedDraftReport,
   getReportById,
   getReportFormValues,
   markReportFinished,
@@ -43,7 +44,7 @@ interface EditorPhoto extends ReportPhoto {
   previewUrl: string;
 }
 
-type SaveStatus = "saving" | "saved" | "error";
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 const AUTOSAVE_DELAY_MS = 700;
 
@@ -55,6 +56,19 @@ const EMPTY_FORM_VALUES: ReportFormValues = {
   location: "",
   serviceDescription: "",
 };
+
+const getCurrentLocalDate = () => {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${today.getFullYear()}-${month}-${day}`;
+};
+
+const createNewReportFormValues = (): ReportFormValues => ({
+  ...EMPTY_FORM_VALUES,
+  serviceDate: getCurrentLocalDate(),
+});
 
 const createId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -68,6 +82,15 @@ const formValuesAreEqual = (first: ReportFormValues, second: ReportFormValues) =
   first.serviceDate === second.serviceDate &&
   first.location === second.location &&
   first.serviceDescription === second.serviceDescription;
+
+const hasPersistableFormContent = (values: ReportFormValues) =>
+  [
+    values.workName,
+    values.contractor,
+    values.engineer,
+    values.location,
+    values.serviceDescription,
+  ].some((value) => value.trim().length > 0);
 
 const createPreviewPhoto = (photo: ReportPhoto): EditorPhoto => ({
   ...photo,
@@ -85,6 +108,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
   const photosRef = useRef<EditorPhoto[]>([]);
   const formValuesRef = useRef<ReportFormValues>(EMPTY_FORM_VALUES);
   const lastSavedFormValuesRef = useRef<ReportFormValues>(EMPTY_FORM_VALUES);
+  const isPersistedRef = useRef(false);
   const isMountedRef = useRef(true);
   const [report, setReport] = useState<Report | null>(null);
   const [formValues, setFormValues] = useState<ReportFormValues>(EMPTY_FORM_VALUES);
@@ -96,7 +120,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
   const revokePreviewUrl = (previewUrl: string) => {
     URL.revokeObjectURL(previewUrl);
@@ -130,10 +154,52 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
     }
   }, []);
 
+  const ensureReportPersisted = useCallback(async () => {
+    const currentReport = reportRef.current;
+
+    if (!currentReport) {
+      return null;
+    }
+
+    if (isPersistedRef.current) {
+      return currentReport;
+    }
+
+    if (isMountedRef.current) {
+      setSaveStatus("saving");
+    }
+
+    try {
+      const persistedReport = await createDraftReport(currentReport.id);
+      isPersistedRef.current = true;
+      reportRef.current = persistedReport;
+
+      if (isMountedRef.current) {
+        setReport(persistedReport);
+      }
+
+      return persistedReport;
+    } catch {
+      if (isMountedRef.current) {
+        setSaveStatus("error");
+      }
+
+      return null;
+    }
+  }, []);
+
   const persistFormValues = useCallback(async (values: ReportFormValues) => {
     const currentReport = reportRef.current;
 
-    if (!currentReport || formValuesAreEqual(values, lastSavedFormValuesRef.current)) {
+    if (!currentReport) {
+      return false;
+    }
+
+    if (!isPersistedRef.current && !hasPersistableFormContent(values)) {
+      return true;
+    }
+
+    if (formValuesAreEqual(values, lastSavedFormValuesRef.current)) {
       return Boolean(currentReport);
     }
 
@@ -142,7 +208,13 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
     }
 
     try {
-      const savedReport = await saveReport(currentReport, values);
+      const persistedReport = await ensureReportPersisted();
+
+      if (!persistedReport) {
+        return false;
+      }
+
+      const savedReport = await saveReport(persistedReport, values);
 
       lastSavedFormValuesRef.current = values;
       reportRef.current = savedReport;
@@ -160,7 +232,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
 
       return false;
     }
-  }, []);
+  }, [ensureReportPersisted]);
 
   const persistPhotoDescription = useCallback(
     async (photoId: string, description: string) => {
@@ -209,11 +281,18 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
         if (!requestedReportId) {
           const newReportId = generatedReportIdRef.current ?? createId();
           generatedReportIdRef.current = newReportId;
-          await createDraftReport(newReportId);
+          const unsavedReport = createUnsavedDraftReport(newReportId);
 
-          if (isCurrent) {
-            router.replace(`/relatorios/${newReportId}`);
-          }
+          isPersistedRef.current = false;
+          reportRef.current = unsavedReport;
+          photosRef.current = [];
+          const initialFormValues = createNewReportFormValues();
+          formValuesRef.current = initialFormValues;
+          lastSavedFormValuesRef.current = initialFormValues;
+          setCurrentReport(unsavedReport);
+          setCurrentPhotos([]);
+          setFormValues(initialFormValues);
+          setSaveStatus("idle");
 
           return;
         }
@@ -236,6 +315,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
         const loadedFormValues = getReportFormValues(loadedReport);
 
         reportRef.current = loadedReport;
+        isPersistedRef.current = true;
         photosRef.current = editorPhotos;
         formValuesRef.current = loadedFormValues;
         lastSavedFormValuesRef.current = loadedFormValues;
@@ -259,10 +339,14 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
     return () => {
       isCurrent = false;
     };
-  }, [requestedReportId, router]);
+  }, [requestedReportId]);
 
   useEffect(() => {
     if (!report || formValuesAreEqual(formValues, lastSavedFormValuesRef.current)) {
+      return;
+    }
+
+    if (!isPersistedRef.current && !hasPersistableFormContent(formValues)) {
       return;
     }
 
@@ -332,7 +416,19 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
       };
     });
 
+    if (newPhotos.length === 0) {
+      setFileError("Não foi possível processar as imagens selecionadas.");
+      setIsProcessing(false);
+      return;
+    }
+
     try {
+      const persistedReport = await ensureReportPersisted();
+
+      if (!persistedReport || !await persistFormValues(formValuesRef.current)) {
+        throw new Error("Não foi possível preparar o relatório para salvar as fotos.");
+      }
+
       await addReportPhotos(
         newPhotos.map(({ previewUrl: _previewUrl, ...photo }) => photo),
       );
@@ -497,11 +593,13 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
   };
 
   const saveStatusText = {
+    idle: "",
     saving: "Salvando...",
     saved: "Salvo neste dispositivo",
     error: "Erro ao salvar",
   }[saveStatus];
   const saveStatusClass = {
+    idle: "",
     saving: styles.saveStatusSaving,
     saved: styles.saveStatusSaved,
     error: styles.saveStatusError,
@@ -543,9 +641,11 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
         <section className={styles.introduction} aria-labelledby="page-title">
           <div className={styles.titleRow}>
             <h1 id="page-title">{requestedReportId ? "Editar Relatório" : "Novo Relatório"}</h1>
-            <p className={`${styles.saveStatus} ${saveStatusClass}`} role="status">
-              {saveStatusText}
-            </p>
+            {saveStatus !== "idle" && (
+              <p className={`${styles.saveStatus} ${saveStatusClass}`} role="status">
+                {saveStatusText}
+              </p>
+            )}
           </div>
           <p>Preencha os dados do serviço e adicione as fotos do registro.</p>
         </section>

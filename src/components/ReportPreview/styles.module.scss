@@ -93,7 +93,7 @@
 .compactHeader {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #cfd3d1;
+  border-bottom: 1px solid #dfe2e0;
 }
 
 .firstPageHeader {
@@ -188,32 +188,25 @@
   min-height: 0;
   flex: 1;
   flex-direction: column;
-  padding-top: 4%;
+  padding-top: 4.8%;
 }
 
 .photoSectionTitle {
-  margin-bottom: 2.5%;
+  margin-bottom: 3%;
+  text-align: center;
 }
 
 .photoGrid {
   display: grid;
-  min-height: 0;
-  flex: 1;
+  align-items: start;
+  flex: 0 0 auto;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 3.2%;
 }
 
-.firstPagePhotoGrid {
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-}
-
-.followingPagePhotoGrid {
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-}
-
 .photoItem {
   display: flex;
-  min-height: 0;
+  align-self: start;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid #d7dbd9;
@@ -221,8 +214,9 @@
 }
 
 .photoFrame {
+  aspect-ratio: 16 / 9;
   min-height: 0;
-  flex: 1;
+  overflow: hidden;
   background: #f2f3f2;
 }
 

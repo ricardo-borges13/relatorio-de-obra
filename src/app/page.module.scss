@@ -135,6 +135,14 @@
   box-shadow: var(--shadow-card);
 }
 
+.reportCarddraft {
+  border-left: 4px solid #c99b58;
+}
+
+.reportCardfinished {
+  border-left: 4px solid #76977d;
+}
+
 .reportCardLink {
   display: flex;
   min-width: 0;
@@ -145,6 +153,10 @@
   padding: 20px 12px 20px 22px;
   color: inherit;
   text-decoration: none;
+
+  > div {
+    min-width: 0;
+  }
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -268,11 +280,15 @@
 }
 
 .statusdraft {
-  background: #f5f3ef;
+  border-color: #dec79d;
+  color: #76501e;
+  background: #faf3e5;
 }
 
 .statusfinished {
-  background: #f0f2f1;
+  border-color: #b7cdb9;
+  color: #315a3b;
+  background: #eef6ef;
 }
 
 .modalBackdrop {
@@ -389,8 +405,7 @@
 
   .reportCardLink {
     align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     padding: 18px 58px 18px 18px;
   }
 
