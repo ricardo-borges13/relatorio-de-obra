@@ -561,6 +561,10 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
             </button>
           </div>
 
+          <p className={styles.photoGuidance}>
+            <strong>Dica: para melhor apresentação no relatório, prefira tirar as fotos com o celular na horizontal.</strong>
+          </p>
+
           {fileError && <p className={styles.fileError} role="status">{fileError}</p>}
 
           {photos.length === 0 ? (

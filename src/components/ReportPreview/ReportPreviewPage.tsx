@@ -82,11 +82,15 @@ export default function ReportPreviewPage({
               <section className={styles.serviceDataSection} aria-label="Dados do serviço">
                 <h2>Dados do serviço</h2>
                 <dl className={styles.serviceDataList}>
-                  <ServiceData label="Obra" value={report.workName} />
-                  <ServiceData label="Empresa terceirizada" value={report.contractor} />
-                  <ServiceData label="Engenheiro responsável" value={report.engineer} />
-                  <ServiceData label="Data" value={hasContent(report.serviceDate) ? formatServiceDate(report.serviceDate) : undefined} />
-                  <ServiceData label="Local / setor" value={report.location} />
+                  <div className={styles.serviceDataColumn}>
+                    <ServiceData label="Obra" value={report.workName} />
+                    <ServiceData label="Engenheiro responsável" value={report.engineer} />
+                    <ServiceData label="Data" value={hasContent(report.serviceDate) ? formatServiceDate(report.serviceDate) : undefined} />
+                  </div>
+                  <div className={styles.serviceDataColumn}>
+                    <ServiceData label="Empresa terceirizada" value={report.contractor} />
+                    <ServiceData label="Local / setor" value={report.location} />
+                  </div>
                 </dl>
               </section>
             )}

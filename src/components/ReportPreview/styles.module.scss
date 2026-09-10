@@ -110,8 +110,14 @@
 .serviceDataList {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 3px 6%;
+  gap: 6%;
   margin-top: 2.2%;
+}
+
+.serviceDataColumn {
+  display: grid;
+  align-content: start;
+  gap: 3px;
 }
 
 .serviceDataItem {
@@ -189,7 +195,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: fill;
 }
 
 .photoCaption {
