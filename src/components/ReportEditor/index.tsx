@@ -88,6 +88,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
 
   const revokePreviewUrl = (previewUrl: string) => {
@@ -126,7 +127,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
     const currentReport = reportRef.current;
 
     if (!currentReport || formValuesAreEqual(values, lastSavedFormValuesRef.current)) {
-      return;
+      return Boolean(currentReport);
     }
 
     if (isMountedRef.current) {
@@ -143,10 +144,14 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
         setReport(savedReport);
         setSaveStatus("saved");
       }
+
+      return true;
     } catch {
       if (isMountedRef.current) {
         setSaveStatus("error");
       }
+
+      return false;
     }
   }, []);
 
@@ -159,10 +164,14 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
         if (isMountedRef.current) {
           setSaveStatus("saved");
         }
+
+        return true;
       } catch {
         if (isMountedRef.current) {
           setSaveStatus("error");
         }
+
+        return false;
       }
     },
     [markReportUpdated],
@@ -393,7 +402,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
     }
   };
 
-  const handleCancel = async () => {
+  const flushPendingChanges = useCallback(async () => {
     const pendingPhotoIds = Array.from(photoDescriptionTimersRef.current.keys());
 
     pendingPhotoIds.forEach((photoId) => {
@@ -406,15 +415,40 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
       photoDescriptionTimersRef.current.delete(photoId);
     });
 
-    await Promise.all(
+    const photoSaveResults = await Promise.all(
       pendingPhotoIds.map((photoId) => {
         const photo = photosRef.current.find((currentPhoto) => currentPhoto.id === photoId);
 
-        return photo ? persistPhotoDescription(photoId, photo.description) : undefined;
+        return photo ? persistPhotoDescription(photoId, photo.description) : true;
       }),
     );
-    await persistFormValues(formValuesRef.current);
+
+    const formSaved = await persistFormValues(formValuesRef.current);
+
+    return formSaved && photoSaveResults.every(Boolean);
+  }, [persistFormValues, persistPhotoDescription]);
+
+  const handleCancel = async () => {
+    await flushPendingChanges();
     router.push("/");
+  };
+
+  const handlePreview = async () => {
+    const currentReport = reportRef.current;
+
+    if (!currentReport || isPreviewing || isProcessing) {
+      return;
+    }
+
+    setIsPreviewing(true);
+    const changesSaved = await flushPendingChanges();
+
+    if (!changesSaved || !isMountedRef.current || !reportRef.current) {
+      setIsPreviewing(false);
+      return;
+    }
+
+    router.push(`/relatorios/${reportRef.current.id}/preview`);
   };
 
   const saveStatusText = {
@@ -562,7 +596,9 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
 
         <div className={styles.finalActions}>
           <button className={styles.cancelButton} onClick={() => void handleCancel()} type="button">Cancelar</button>
-          <button className={styles.generateButton} type="button">Gerar relatório</button>
+          <button className={styles.generateButton} disabled={isPreviewing || isProcessing} onClick={() => void handlePreview()} type="button">
+            {isPreviewing ? "Salvando..." : "Visualizar relatório"}
+          </button>
         </div>
       </main>
     </div>

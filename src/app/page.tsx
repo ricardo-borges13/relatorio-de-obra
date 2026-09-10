@@ -1,10 +1,10 @@
 "use client";
 
 import Header from "@/components/Header";
-import { getSavedReports } from "@/lib/db/reports";
+import { deleteReport, getSavedReports } from "@/lib/db/reports";
 import type { Report } from "@/types/report";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.scss";
 
 const formatServiceDate = (serviceDate: string) => {
@@ -26,6 +26,11 @@ export default function Home() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [reportToDelete, setReportToDelete] = useState<Report | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -54,6 +59,66 @@ export default function Home() {
       isCurrent = false;
     };
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (reportToDelete && !isDeleting) {
+        setReportToDelete(null);
+        setDeleteError(null);
+        return;
+      }
+
+      setOpenMenuId(null);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isDeleting, reportToDelete]);
+
+  useEffect(() => {
+    if (reportToDelete) {
+      cancelDeleteButtonRef.current?.focus();
+    }
+  }, [reportToDelete]);
+
+  const openDeleteConfirmation = (report: Report) => {
+    setOpenMenuId(null);
+    setDeleteError(null);
+    setReportToDelete(report);
+  };
+
+  const closeDeleteConfirmation = () => {
+    if (!isDeleting) {
+      setReportToDelete(null);
+      setDeleteError(null);
+    }
+  };
+
+  const handleReportDeletion = async () => {
+    if (!reportToDelete) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await deleteReport(reportToDelete.id);
+      setReports((currentReports) =>
+        currentReports.filter((report) => report.id !== reportToDelete.id),
+      );
+      setReportToDelete(null);
+    } catch {
+      setDeleteError("Não foi possível excluir este relatório. Tente novamente.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className={styles.page}>
@@ -92,24 +157,104 @@ export default function Home() {
           ) : (
             <div className={styles.reportList}>
               {reports.map((report) => (
-                <Link className={styles.reportCard} href={`/relatorios/${report.id}`} key={report.id}>
-                  <div>
-                    <p className={styles.reportService}>
-                      {report.serviceDescription || "Serviço sem descrição"}
-                    </p>
-                    <p className={styles.reportDetails}>
-                      {report.workName || "Obra não informada"} • {formatServiceDate(report.serviceDate)}
-                    </p>
+                <article className={styles.reportCard} key={report.id}>
+                  <Link className={styles.reportCardLink} href={`/relatorios/${report.id}`}>
+                    <div>
+                      <p className={styles.reportService}>
+                        {report.serviceDescription || "Serviço sem descrição"}
+                      </p>
+                      <p className={styles.reportDetails}>
+                        {report.workName || "Obra não informada"} • {formatServiceDate(report.serviceDate)}
+                      </p>
+                    </div>
+                    <span className={`${styles.statusBadge} ${styles[`status${report.status}`]}`}>
+                      {statusLabel[report.status]}
+                    </span>
+                  </Link>
+
+                  <div className={styles.reportMenuWrap}>
+                    <button
+                      aria-expanded={openMenuId === report.id}
+                      aria-haspopup="menu"
+                      aria-label={`Opções do relatório ${report.workName || report.id}`}
+                      className={styles.reportMenuButton}
+                      onClick={() => setOpenMenuId((currentId) => (currentId === report.id ? null : report.id))}
+                      type="button"
+                    >
+                      <span aria-hidden="true">⋮</span>
+                    </button>
+
+                    {openMenuId === report.id && (
+                      <div className={styles.reportMenu} role="menu">
+                        <Link
+                          className={styles.reportMenuItem}
+                          href={`/relatorios/${report.id}`}
+                          onClick={() => setOpenMenuId(null)}
+                          role="menuitem"
+                        >
+                          {report.status === "draft" ? "Editar" : "Visualizar"}
+                        </Link>
+                        <button
+                          className={`${styles.reportMenuItem} ${styles.deleteMenuItem}`}
+                          onClick={() => openDeleteConfirmation(report)}
+                          role="menuitem"
+                          type="button"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <span className={`${styles.statusBadge} ${styles[`status${report.status}`]}`}>
-                    {statusLabel[report.status]}
-                  </span>
-                </Link>
+                </article>
               ))}
             </div>
           )}
         </section>
       </main>
+
+      {reportToDelete && (
+        <div
+          className={styles.modalBackdrop}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeDeleteConfirmation();
+            }
+          }}
+        >
+          <section
+            aria-describedby="delete-report-description"
+            aria-labelledby="delete-report-title"
+            aria-modal="true"
+            className={styles.deleteModal}
+            role="dialog"
+          >
+            <h2 id="delete-report-title">Excluir relatório?</h2>
+            <p id="delete-report-description">
+              O relatório e todas as fotos associadas serão removidos deste dispositivo.
+            </p>
+            {deleteError && <p className={styles.deleteError} role="alert">{deleteError}</p>}
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalCancelButton}
+                disabled={isDeleting}
+                onClick={closeDeleteConfirmation}
+                ref={cancelDeleteButtonRef}
+                type="button"
+              >
+                Cancelar
+              </button>
+              <button
+                className={styles.modalDeleteButton}
+                disabled={isDeleting}
+                onClick={() => void handleReportDeletion()}
+                type="button"
+              >
+                {isDeleting ? "Excluindo..." : "Excluir"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

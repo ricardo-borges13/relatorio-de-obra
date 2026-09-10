@@ -71,3 +71,10 @@ export const touchReport = async (id: string) => {
 
   return updatedAt;
 };
+
+export const deleteReport = async (reportId: string) => {
+  await database.transaction("rw", database.reports, database.reportPhotos, async () => {
+    await database.reportPhotos.where("reportId").equals(reportId).delete();
+    await database.reports.delete(reportId);
+  });
+};

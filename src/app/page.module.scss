@@ -127,23 +127,118 @@
 }
 
 .reportCard {
+  position: relative;
   display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.reportCardLink {
+  display: flex;
+  min-width: 0;
+  flex: 1;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 20px 22px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
+  padding: 20px 12px 20px 22px;
   color: inherit;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-card);
   text-decoration: none;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      border-color: #bcc3c5;
       background: #f8f9f9;
     }
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgb(38 54 62 / 20%);
+    outline-offset: -3px;
+  }
+}
+
+.reportMenuWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+}
+
+.reportMenuButton {
+  display: inline-flex;
+  width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-small);
+  color: var(--color-text-secondary);
+  background: transparent;
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text-primary);
+    background: #f0f1f0;
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgb(38 54 62 / 20%);
+    outline-offset: 1px;
+  }
+}
+
+.reportMenu {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% - 10px);
+  right: 8px;
+  width: 148px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+  box-shadow: 0 8px 20px rgb(31 41 45 / 14%);
+}
+
+.reportMenuItem {
+  display: flex;
+  width: 100%;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--color-text-primary);
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    background: #f0f1f0;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(38 54 62 / 25%);
+    outline-offset: -2px;
+  }
+}
+
+.deleteMenuItem {
+  color: #754c37;
+
+  &:hover {
+    color: #4b2e21;
+    background: #f7f2ef;
   }
 }
 
@@ -180,6 +275,95 @@
   background: #f0f2f1;
 }
 
+.modalBackdrop {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(24 29 31 / 38%);
+}
+
+.deleteModal {
+  width: min(100%, 440px);
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  box-shadow: 0 16px 40px rgb(18 24 27 / 20%);
+
+  h2 {
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+  }
+
+  p {
+    margin-top: 10px;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+}
+
+.deleteError {
+  color: #754c37 !important;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.modalCancelButton,
+.modalDeleteButton {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-small);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid rgb(38 54 62 / 20%);
+    outline-offset: 2px;
+  }
+}
+
+.modalCancelButton {
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+
+  &:not(:disabled):hover {
+    border-color: #bcc3c5;
+    background: #f8f9f9;
+  }
+}
+
+.modalDeleteButton {
+  border: 1px solid #754c37;
+  color: #fff;
+  background: #754c37;
+
+  &:not(:disabled):hover {
+    border-color: #4b2e21;
+    background: #4b2e21;
+  }
+}
+
+.modalCancelButton:disabled,
+.modalDeleteButton:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 @media (max-width: 720px) {
   .main {
     width: min(100% - 32px, 1120px);
@@ -200,10 +384,39 @@
   }
 
   .reportCard {
+    display: block;
+  }
+
+  .reportCardLink {
     align-items: flex-start;
     flex-direction: column;
     gap: 12px;
-    padding: 18px;
+    padding: 18px 58px 18px 18px;
+  }
+
+  .reportMenuWrap {
+    position: absolute;
+    top: 8px;
+    right: 4px;
+    padding: 0;
+  }
+
+  .reportMenu {
+    top: calc(100% - 6px);
+    right: 0;
+  }
+
+  .deleteModal {
+    padding: 24px;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+  }
+
+  .modalCancelButton,
+  .modalDeleteButton {
+    width: 100%;
   }
 }
 
