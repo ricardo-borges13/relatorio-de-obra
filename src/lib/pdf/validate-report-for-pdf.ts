@@ -3,7 +3,14 @@ import type { ReportPhoto } from "@/types/report-photo";
 
 const hasContent = (value: string | undefined) => Boolean(value?.trim());
 
-export const validateReportForPdf = (report: Report, photos: ReportPhoto[]) => {
+interface RequiredReportFields {
+  workName: string;
+  engineer: string;
+  serviceDate: string;
+  serviceDescription: string;
+}
+
+export const validateRequiredReportFields = (report: RequiredReportFields) => {
   const missingFields = [
     !hasContent(report.workName) && "Obra",
     !hasContent(report.engineer) && "Engenheiro responsável",
@@ -13,6 +20,16 @@ export const validateReportForPdf = (report: Report, photos: ReportPhoto[]) => {
 
   if (missingFields.length > 0) {
     return `Preencha os campos obrigatórios: ${missingFields.join(", ")}.`;
+  }
+
+  return null;
+};
+
+export const validateReportForPdf = (report: Report, photos: ReportPhoto[]) => {
+  const requiredFieldsError = validateRequiredReportFields(report);
+
+  if (requiredFieldsError) {
+    return requiredFieldsError;
   }
 
   if (photos.length === 0) {

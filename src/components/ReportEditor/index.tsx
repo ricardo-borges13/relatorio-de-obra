@@ -22,7 +22,7 @@ import type { ProcessedImage } from "@/lib/images/types";
 import { downloadReportPdf } from "@/lib/pdf/download-report-pdf";
 import { getReportPdfFilename } from "@/lib/pdf/filename";
 import { generateReportPdf } from "@/lib/pdf/generate-report-pdf";
-import { validateReportForPdf } from "@/lib/pdf/validate-report-for-pdf";
+import { validateReportForPdf, validateRequiredReportFields } from "@/lib/pdf/validate-report-for-pdf";
 import type { Report, ReportFormValues } from "@/types/report";
 import type { ReportPhoto } from "@/types/report-photo";
 import Link from "next/link";
@@ -540,6 +540,17 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
     const currentReport = reportRef.current;
 
     if (!currentReport || isPreviewing || isProcessing) {
+      return;
+    }
+
+    setPdfError(null);
+    const validationSource = !isPersistedRef.current && !hasPersistableFormContent(formValuesRef.current)
+      ? currentReport
+      : formValuesRef.current;
+    const validationError = validateRequiredReportFields(validationSource);
+
+    if (validationError) {
+      setPdfError(validationError);
       return;
     }
 
