@@ -1,11 +1,6 @@
-export interface ImageDiagnostics {
-  originalWidth: number;
-  originalHeight: number;
-  originalSize: number;
-  optimizedWidth: number;
-  optimizedHeight: number;
-  optimizedSize: number;
-}
+import type { ImageDiagnostics } from "@/types/report-photo";
+
+export type { ImageDiagnostics } from "@/types/report-photo";
 
 export interface ProcessedImage {
   file: File;

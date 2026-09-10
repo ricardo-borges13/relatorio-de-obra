@@ -45,6 +45,39 @@
   }
 }
 
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.saveStatus {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.saveStatusSaving {
+  color: var(--color-text-secondary);
+}
+
+.saveStatusSaved {
+  color: var(--color-text-muted);
+}
+
+.saveStatusError {
+  color: #805236;
+}
+
+.loadingState {
+  padding: 72px 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
 .section,
 .photoSection {
   padding-top: 32px;
@@ -350,6 +383,12 @@
   .introduction {
     margin-top: 28px;
     padding-bottom: 32px;
+  }
+
+  .titleRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .fieldsGrid {

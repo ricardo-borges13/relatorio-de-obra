@@ -114,6 +114,72 @@
   line-height: 1.55;
 }
 
+.loadingState {
+  padding: 24px 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.reportList {
+  display: grid;
+  gap: 12px;
+}
+
+.reportCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  color: inherit;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  text-decoration: none;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: #bcc3c5;
+      background: #f8f9f9;
+    }
+  }
+}
+
+.reportService {
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+  font-weight: 620;
+  line-height: 1.45;
+}
+
+.reportDetails {
+  margin-top: 5px;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.statusBadge {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.statusdraft {
+  background: #f5f3ef;
+}
+
+.statusfinished {
+  background: #f0f2f1;
+}
+
 @media (max-width: 720px) {
   .main {
     width: min(100% - 32px, 1120px);
@@ -131,6 +197,13 @@
   .emptyState {
     min-height: 168px;
     padding: 24px;
+  }
+
+  .reportCard {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px;
   }
 }
 
