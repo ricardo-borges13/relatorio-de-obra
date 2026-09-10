@@ -161,8 +161,9 @@ const drawPhotoGrid = (
   regular: PDFFont,
   bold: PDFFont,
 ) => {
-  const gap = 12;
-  const columnWidth = (contentWidth - gap) / 2;
+  const columnGap = 12;
+  const rowGap = rows === 3 ? 40 : 26;
+  const columnWidth = (contentWidth - columnGap) / 2;
   const frameHeight = columnWidth * 9 / 16;
   const preparedPhotos = photos.map(({ photo, image }) => {
     const description = photo.description.trim();
@@ -172,7 +173,7 @@ const drawPhotoGrid = (
       photo,
       image,
       descriptionLines,
-      captionHeight: 20 + descriptionLines.length * 8,
+      captionHeight: (rows === 2 ? 24 : 20) + descriptionLines.length * 8,
     };
   });
   const rowHeights = Array.from({ length: rows }, (_, row) => {
@@ -183,7 +184,7 @@ const drawPhotoGrid = (
       : 0;
   });
   const rowTopPositions = rowHeights.reduce<number[]>((positions, rowHeight, row) => {
-    positions.push(row === 0 ? startY : positions[row - 1] - rowHeights[row - 1] - gap);
+    positions.push(row === 0 ? startY : positions[row - 1] - rowHeights[row - 1] - rowGap);
 
     return positions;
   }, []);
@@ -191,7 +192,7 @@ const drawPhotoGrid = (
   preparedPhotos.forEach(({ photo, image, descriptionLines, captionHeight }, index) => {
     const row = Math.floor(index / 2);
     const column = index % 2;
-    const x = PDF_PAGE.marginX + column * (columnWidth + gap);
+    const x = PDF_PAGE.marginX + column * (columnWidth + columnGap);
     const top = rowTopPositions[row];
     const cardHeight = frameHeight + captionHeight;
     const frameY = top - frameHeight;
@@ -252,7 +253,7 @@ export const generateReportPdf = async (report: Report, reportPhotos: ReportPhot
         size: 8,
         color: textColor,
       });
-      photoStartY -= 18;
+      photoStartY -= 22;
     } else {
       const logoWidth = 80;
       const logoHeight = logo.height * (logoWidth / logo.width);
