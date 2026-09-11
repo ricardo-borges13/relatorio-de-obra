@@ -18,6 +18,18 @@
   gap: 16px;
 }
 
+.logoLink {
+  display: block;
+  cursor: pointer;
+  text-decoration: none;
+
+  &:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid var(--color-action);
+    outline-offset: 3px;
+  }
+}
+
 .logoWrap {
   position: relative;
   width: 156px;
