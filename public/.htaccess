@@ -1,4 +1,4 @@
-Options -Indexes
+Options -Indexes -MultiViews
 
 DirectoryIndex index.html
 
@@ -11,7 +11,7 @@ AddType application/manifest+json .webmanifest
         Header always set Service-Worker-Allowed "/"
     </Files>
 
-    <FilesMatch "\.(?:html|webmanifest)$">
+    <FilesMatch "\.(?:html|webmanifest|txt)$">
         Header always set Cache-Control "no-cache, must-revalidate"
     </FilesMatch>
 
@@ -30,11 +30,36 @@ AddType application/manifest+json .webmanifest
     RewriteEngine On
     RewriteBase /
 
-    RewriteCond %{REQUEST_FILENAME} -f [OR]
-    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteOptions IgnoreInherit
+
+    # ---------------------------------------------------------
+    # NEXT.JS APP ROUTER - RSC
+    # ---------------------------------------------------------
+
+    # Requisições com ?_rsc=... devem receber o payload .txt
+    # Exemplo:
+    # /relatorios/novo/?_rsc=abc
+    # -> /relatorios/novo.txt
+    RewriteCond %{QUERY_STRING} (^|&)_rsc=
+    RewriteCond %{DOCUMENT_ROOT}/$1.txt -f
+    RewriteRule ^(.+?)/?$ /$1.txt [L]
+
+    # ---------------------------------------------------------
+    # NEXT.JS STATIC EXPORT - HTML
+    # ---------------------------------------------------------
+
+    # /relatorios/novo
+    # /relatorios/novo/
+    # -> /relatorios/novo.html
+    RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+    RewriteRule ^(.+?)/?$ /$1.html [L]
+
+    # Arquivos físicos reais
+    RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    RewriteCond %{DOCUMENT_ROOT}/$1.html -f
-    RewriteRule ^(.+)/?$ /$1.html [L]
+    # Diretórios físicos reais
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
 
 </IfModule>

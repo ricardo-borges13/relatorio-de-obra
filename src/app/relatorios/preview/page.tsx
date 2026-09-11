@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+/* eslint-disable @next/next/no-html-link-for-pages -- Static export uses document navigation to avoid App Router RSC route requests. */
+
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import ReportPreview from "@/components/ReportPreview";
@@ -12,7 +13,7 @@ function ReportPreviewContent() {
     return (
       <main>
         <p>Relatório não informado.</p>
-        <Link href="/">Voltar para relatórios</Link>
+        <a href="/">Voltar para relatórios</a>
       </main>
     );
   }

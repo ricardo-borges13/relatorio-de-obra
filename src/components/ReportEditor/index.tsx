@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-html-link-for-pages, @next/next/no-location-assign-relative-destination -- Static export uses document navigation to avoid App Router RSC route requests. */
+
 import Header from "@/components/Header";
 import {
   addReportPhotos,
@@ -27,8 +29,6 @@ import { validateReportForPdf, validateRequiredReportFields } from "@/lib/pdf/va
 import { DEFAULT_PHOTO_LAYOUT, getPhotoLayout } from "@/lib/reports/paginate-photos";
 import type { PhotoLayout, Report, ReportFormValues } from "@/types/report";
 import type { ReportPhoto } from "@/types/report-photo";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
   useCallback,
@@ -100,7 +100,6 @@ const createPreviewPhoto = (photo: ReportPhoto): EditorPhoto => ({
 });
 
 export default function ReportEditor({ reportId: requestedReportId }: ReportEditorProps) {
-  const router = useRouter();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const generatedReportIdRef = useRef<string | null>(null);
@@ -608,7 +607,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
 
   const handleCancel = async () => {
     await flushPendingChanges();
-    router.push("/");
+    window.location.assign("/");
   };
 
   const handlePreview = async () => {
@@ -637,7 +636,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
       return;
     }
 
-    router.push(`/relatorios/preview?id=${encodeURIComponent(reportRef.current.id)}`);
+    window.location.assign(`/relatorios/preview?id=${encodeURIComponent(reportRef.current.id)}`);
   };
 
   const handleSavePdf = async () => {
@@ -708,7 +707,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
         <Header />
         <main className={styles.main}>
           <p className={styles.loadingState}>{loadError ?? "Não foi possível carregar o relatório."}</p>
-          <Link className={styles.backLink} href="/">Voltar para a Home</Link>
+          <a className={styles.backLink} href="/">Voltar para a Home</a>
         </main>
       </div>
     );
@@ -719,10 +718,10 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
       <Header />
 
       <main className={styles.main}>
-        <Link className={styles.backLink} href="/">
+        <a className={styles.backLink} href="/">
           <span aria-hidden="true">←</span>
           Voltar
-        </Link>
+        </a>
 
         <section className={styles.introduction} aria-labelledby="page-title">
           <div className={styles.titleRow}>

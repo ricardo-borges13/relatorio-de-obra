@@ -19,7 +19,7 @@ npm run build
 
 ## Estado atual
 
-O sistema possui Header responsivo com a logo local RIOW, Home e as rotas estáticas `/relatorios/novo`, `/relatorios/editar?id=<id>` e `/relatorios/preview?id=<id>`. Relatórios novos começam como `draft`, exibem a data atual do dispositivo e podem permanecer incompletos. Um relatório aberto em `/relatorios/novo` permanece apenas em memória até receber conteúdo real em um campo ou uma fotografia; a data automática sozinha não cria um rascunho. Rascunhos totalmente vazios não são persistidos nem aparecem na Home. A Home lista os relatórios salvos por última atualização e permite continuar a edição.
+O sistema possui Header responsivo com a logo local RIOW, Home e as rotas estáticas `/relatorios/novo`, `/relatorios/editar?id=<id>` e `/relatorios/preview?id=<id>`. As transições entre essas páginas usam navegação HTML nativa para evitar requisições RSC incompatíveis do App Router no static export do Next.js 16 em Apache; o service worker atende essas mesmas URLs quando estiver offline. Relatórios novos começam como `draft`, exibem a data atual do dispositivo e podem permanecer incompletos. Um relatório aberto em `/relatorios/novo` permanece apenas em memória até receber conteúdo real em um campo ou uma fotografia; a data automática sozinha não cria um rascunho. Rascunhos totalmente vazios não são persistidos nem aparecem na Home. A Home lista os relatórios salvos por última atualização e permite continuar a edição.
 
 As imagens são validadas e processadas localmente no navegador: o maior lado é limitado a 1280 px e a versão JPEG gerada utiliza qualidade `0.80`. Apenas a fotografia otimizada e seus metadados são persistidos; previews usam Object URLs temporárias.
 

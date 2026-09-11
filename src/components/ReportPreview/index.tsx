@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getReportPhotos } from "@/lib/db/photos";
 import { getReportById, markReportFinished } from "@/lib/db/reports";
@@ -99,7 +98,7 @@ export default function ReportPreview({ reportId }: ReportPreviewProps) {
     return (
       <main className={styles.previewScreen}>
         <p className={styles.statusMessage}>{error ?? "Não foi possível carregar o relatório."}</p>
-        <Link className={styles.backLink} href={reportLink}>← Voltar para o relatório</Link>
+        <a className={styles.backLink} href={reportLink}>← Voltar para o relatório</a>
       </main>
     );
   }
@@ -135,7 +134,7 @@ export default function ReportPreview({ reportId }: ReportPreviewProps) {
   return (
     <main className={styles.previewScreen}>
       <nav className={styles.previewNavigation} aria-label="Ações da prévia">
-        <Link className={styles.backLink} href={reportLink}>← Voltar para o relatório</Link>
+        <a className={styles.backLink} href={reportLink}>← Voltar para o relatório</a>
         <button className={styles.savePdfButton} disabled={isGeneratingPdf} onClick={() => void handleSavePdf()} type="button">
           {isGeneratingPdf ? "Gerando PDF..." : "Salvar PDF"}
         </button>

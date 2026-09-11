@@ -3,7 +3,6 @@
 import Header from "@/components/Header";
 import { deleteReport, getSavedReports } from "@/lib/db/reports";
 import type { Report } from "@/types/report";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.scss";
 
@@ -166,10 +165,10 @@ export default function Home() {
             <p className={styles.description}>
               Registre serviços executados na obra e gere relatórios fotográficos profissionais.
             </p>
-            <Link className={styles.newReportButton} href="/relatorios/novo">
+            <a className={styles.newReportButton} href="/relatorios/novo">
               <span aria-hidden="true">+</span>
               Novo relatório
-            </Link>
+            </a>
           </div>
         </section>
 
@@ -193,7 +192,7 @@ export default function Home() {
             <div className={styles.reportList}>
               {reports.map((report) => (
                 <article className={`${styles.reportCard} ${styles[`reportCard${report.status}`]}`} key={report.id}>
-                  <Link
+                  <a
                     className={styles.reportCardLink}
                     href={
                       report.status === "finished"
@@ -208,7 +207,7 @@ export default function Home() {
                     <span className={`${styles.statusBadge} ${styles[`status${report.status}`]}`}>
                       {statusLabel[report.status]}
                     </span>
-                  </Link>
+                  </a>
 
                   <div className={styles.reportMenuWrap} ref={openMenuId === report.id ? openMenuWrapRef : undefined}>
                     <button
@@ -236,7 +235,7 @@ export default function Home() {
 
                     {openMenuId === report.id && (
                       <div className={styles.reportMenu} role="menu">
-                        <Link
+                        <a
                           className={styles.reportMenuItem}
                           href={
                             report.status === "finished"
@@ -250,7 +249,7 @@ export default function Home() {
                           role="menuitem"
                         >
                           {report.status === "finished" ? "Visualizar" : "Editar"}
-                        </Link>
+                        </a>
                         <button
                           className={`${styles.reportMenuItem} ${styles.deleteMenuItem}`}
                           onClick={(event) => {
