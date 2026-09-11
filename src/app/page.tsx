@@ -2,6 +2,7 @@
 
 import Header from "@/components/Header";
 import { deleteReport, getSavedReports } from "@/lib/db/reports";
+import { APP_VERSION } from "@/lib/app-version";
 import type { Report } from "@/types/report";
 import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.scss";
@@ -270,6 +271,21 @@ export default function Home() {
           )}
         </section>
       </main>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerContent}>
+          <span>Relatórios de Obra • v{APP_VERSION}</span>
+          <span className={styles.footerDivider} aria-hidden="true">
+            |
+          </span>
+          <span>
+            Desenvolvido por{" "}
+            <a href="https://www.invetec.com.br/" rel="noopener noreferrer" target="_blank">
+              INVETEC
+            </a>
+          </span>
+        </div>
+      </footer>
 
       {reportToDelete && (
         <div
