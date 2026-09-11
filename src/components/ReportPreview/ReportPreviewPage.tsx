@@ -3,6 +3,7 @@ import type { Report } from "@/types/report";
 import type { ReportPhoto } from "@/types/report-photo";
 import PhotoPreviewItem from "./PhotoPreviewItem";
 import styles from "./styles.module.scss";
+import { getPhotoLayout } from "@/lib/reports/paginate-photos";
 
 interface PreviewPhoto extends ReportPhoto {
   previewUrl: string;
@@ -57,6 +58,7 @@ export default function ReportPreviewPage({
     report.location,
   ].some(hasContent);
   const serviceDescription = report.serviceDescription.trim();
+  const photoLayout = getPhotoLayout(report.photoLayout);
 
   return (
     <article
@@ -147,7 +149,7 @@ export default function ReportPreviewPage({
             <h2 className={styles.photoSectionTitle}>Registro Fotográfico</h2>
           )}
           <div
-            className={`${styles.photoGrid} ${isFirstPage ? styles.firstPagePhotoGrid : styles.followingPagePhotoGrid}`}
+            className={`${styles.photoGrid} ${isFirstPage ? styles.firstPagePhotoGrid : styles.followingPagePhotoGrid} ${photoLayout === "portrait" ? styles.portraitPhotoGrid : ""} ${photoLayout === "portrait" && isFirstPage ? styles.portraitFirstPagePhotoGrid : ""} ${photoLayout === "portrait" && !isFirstPage ? styles.portraitFollowingPagePhotoGrid : ""}`}
           >
             {photos.map((photo) => (
               <PhotoPreviewItem

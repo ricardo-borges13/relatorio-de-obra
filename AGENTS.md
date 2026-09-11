@@ -198,6 +198,8 @@ Cada relatório deve possuir inicialmente informações como:
 - data de criação;
 - data da última alteração.
 
+Também deve possuir `photoLayout`, com valores `landscape` (padrão) ou `portrait`. A escolha é manual para todo o relatório: não detectar automaticamente a orientação de cada foto. A paginação depende do formato: Horizontal comporta 4 fotos na primeira página e 6 nas seguintes; Vertical, 2 e 4 respectivamente. Relatórios legados sem esse campo devem assumir `landscape`.
+
 Exemplo de tipo:
 
 ```ts

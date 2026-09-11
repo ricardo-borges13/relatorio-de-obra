@@ -104,7 +104,7 @@ export default function ReportPreview({ reportId }: ReportPreviewProps) {
     );
   }
 
-  const photoPages = paginateReportPhotos(photos);
+  const photoPages = paginateReportPhotos(photos, report.photoLayout);
 
   const handleSavePdf = async () => {
     if (isGeneratingPdf) {

@@ -1,7 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
 import { PDF_PAGE } from "./config";
-import { paginateReportPhotos } from "@/lib/reports/paginate-photos";
-import type { Report } from "@/types/report";
+import { getPhotoLayout, getPhotoPageRows, paginateReportPhotos } from "@/lib/reports/paginate-photos";
+import type { PhotoLayout, Report } from "@/types/report";
 import type { ReportPhoto } from "@/types/report-photo";
 
 interface EmbeddedPhoto {
@@ -158,13 +158,15 @@ const drawPhotoGrid = (
   photos: EmbeddedPhoto[],
   startY: number,
   rows: number,
+  photoLayout: PhotoLayout,
   regular: PDFFont,
   bold: PDFFont,
 ) => {
   const columnGap = 12;
-  const rowGap = rows === 3 ? 40 : 26;
+  const isPortrait = photoLayout === "portrait";
+  const rowGap = isPortrait ? (rows === 2 ? 24 : 26) : (rows === 3 ? 40 : 26);
   const columnWidth = (contentWidth - columnGap) / 2;
-  const frameHeight = columnWidth * 9 / 16;
+  const frameHeight = isPortrait ? columnWidth * 5 / 4 : columnWidth * 9 / 16;
   const preparedPhotos = photos.map(({ photo, image }) => {
     const description = photo.description.trim();
     const descriptionLines = description ? wrapText(description, regular, 6.2, columnWidth - 16) : [];
@@ -223,7 +225,8 @@ export const generateReportPdf = async (report: Report, reportPhotos: ReportPhot
   const embeddedPhotos = await Promise.all(
     reportPhotos.map(async (photo) => ({ photo, image: await pdf.embedJpg(await photo.blob.arrayBuffer()) })),
   );
-  const photoPages = paginateReportPhotos(reportPhotos);
+  const photoLayout = getPhotoLayout(report.photoLayout);
+  const photoPages = paginateReportPhotos(reportPhotos, photoLayout);
 
   photoPages.forEach((photoPage, index) => {
     const page = pdf.addPage([PDF_PAGE.width, PDF_PAGE.height]);
@@ -266,7 +269,15 @@ export const generateReportPdf = async (report: Report, reportPhotos: ReportPhot
       photoStartY = headerLineY - 18;
     }
 
-    drawPhotoGrid(page, photos, photoStartY, photoPage.isFirstPage ? 2 : 3, regular, bold);
+    drawPhotoGrid(
+      page,
+      photos,
+      photoStartY,
+      getPhotoPageRows(photoLayout, photoPage.isFirstPage),
+      photoLayout,
+      regular,
+      bold,
+    );
     drawFooter(page, pageNumber, photoPages.length, regular);
   });
 

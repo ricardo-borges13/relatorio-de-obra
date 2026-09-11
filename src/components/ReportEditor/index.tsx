@@ -14,6 +14,7 @@ import {
   getReportFormValues,
   markReportFinished,
   saveReport,
+  saveReportPhotoLayout,
   touchReport,
 } from "@/lib/db/reports";
 import { formatBytes } from "@/lib/images/format-bytes";
@@ -23,7 +24,8 @@ import { downloadReportPdf } from "@/lib/pdf/download-report-pdf";
 import { getReportPdfFilename } from "@/lib/pdf/filename";
 import { generateReportPdf } from "@/lib/pdf/generate-report-pdf";
 import { validateReportForPdf, validateRequiredReportFields } from "@/lib/pdf/validate-report-for-pdf";
-import type { Report, ReportFormValues } from "@/types/report";
+import { DEFAULT_PHOTO_LAYOUT, getPhotoLayout } from "@/lib/reports/paginate-photos";
+import type { PhotoLayout, Report, ReportFormValues } from "@/types/report";
 import type { ReportPhoto } from "@/types/report-photo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -104,10 +106,12 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
   const generatedReportIdRef = useRef<string | null>(null);
   const previewUrlsRef = useRef(new Set<string>());
   const photoDescriptionTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const photoLayoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reportRef = useRef<Report | null>(null);
   const photosRef = useRef<EditorPhoto[]>([]);
   const formValuesRef = useRef<ReportFormValues>(EMPTY_FORM_VALUES);
   const lastSavedFormValuesRef = useRef<ReportFormValues>(EMPTY_FORM_VALUES);
+  const lastSavedPhotoLayoutRef = useRef<PhotoLayout>(DEFAULT_PHOTO_LAYOUT);
   const isPersistedRef = useRef(false);
   const isMountedRef = useRef(true);
   const [report, setReport] = useState<Report | null>(null);
@@ -256,6 +260,43 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
     [markReportUpdated],
   );
 
+  const persistPhotoLayout = useCallback(async (photoLayout: PhotoLayout) => {
+    const currentReport = reportRef.current;
+
+    if (!currentReport || photoLayout === lastSavedPhotoLayoutRef.current) {
+      return true;
+    }
+
+    if (isMountedRef.current) {
+      setSaveStatus("saving");
+    }
+
+    try {
+      const persistedReport = await ensureReportPersisted();
+
+      if (!persistedReport) {
+        return false;
+      }
+
+      const savedReport = await saveReportPhotoLayout(persistedReport, photoLayout);
+      lastSavedPhotoLayoutRef.current = photoLayout;
+      reportRef.current = savedReport;
+
+      if (isMountedRef.current) {
+        setReport(savedReport);
+        setSaveStatus("saved");
+      }
+
+      return true;
+    } catch {
+      if (isMountedRef.current) {
+        setSaveStatus("error");
+      }
+
+      return false;
+    }
+  }, [ensureReportPersisted]);
+
   useEffect(() => {
     isMountedRef.current = true;
     const previewUrls = previewUrlsRef.current;
@@ -267,6 +308,9 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
       previewUrls.clear();
       photoDescriptionTimers.forEach((timer) => clearTimeout(timer));
       photoDescriptionTimers.clear();
+      if (photoLayoutTimerRef.current) {
+        clearTimeout(photoLayoutTimerRef.current);
+      }
     };
   }, []);
 
@@ -289,6 +333,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
           const initialFormValues = createNewReportFormValues();
           formValuesRef.current = initialFormValues;
           lastSavedFormValuesRef.current = initialFormValues;
+          lastSavedPhotoLayoutRef.current = DEFAULT_PHOTO_LAYOUT;
           setCurrentReport(unsavedReport);
           setCurrentPhotos([]);
           setFormValues(initialFormValues);
@@ -319,6 +364,7 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
         photosRef.current = editorPhotos;
         formValuesRef.current = loadedFormValues;
         lastSavedFormValuesRef.current = loadedFormValues;
+        lastSavedPhotoLayoutRef.current = getPhotoLayout(loadedReport.photoLayout);
         setCurrentReport(loadedReport);
         setCurrentPhotos(editorPhotos);
         setFormValues(loadedFormValues);
@@ -365,6 +411,28 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
 
       return nextValues;
     });
+  };
+
+  const handlePhotoLayoutChange = (photoLayout: PhotoLayout) => {
+    const currentReport = reportRef.current;
+
+    if (!currentReport || getPhotoLayout(currentReport.photoLayout) === photoLayout) {
+      return;
+    }
+
+    const updatedReport = { ...currentReport, photoLayout };
+    reportRef.current = updatedReport;
+    setReport(updatedReport);
+    setSaveStatus("saving");
+
+    if (photoLayoutTimerRef.current) {
+      clearTimeout(photoLayoutTimerRef.current);
+    }
+
+    photoLayoutTimerRef.current = setTimeout(() => {
+      photoLayoutTimerRef.current = null;
+      void persistPhotoLayout(photoLayout);
+    }, AUTOSAVE_DELAY_MS);
   };
 
   const handlePhotoSelection = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -526,10 +594,17 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
       }),
     );
 
+    if (photoLayoutTimerRef.current) {
+      clearTimeout(photoLayoutTimerRef.current);
+      photoLayoutTimerRef.current = null;
+    }
+
+    const photoLayoutSaved = await persistPhotoLayout(getPhotoLayout(reportRef.current?.photoLayout));
+
     const formSaved = await persistFormValues(formValuesRef.current);
 
-    return formSaved && photoSaveResults.every(Boolean);
-  }, [persistFormValues, persistPhotoDescription]);
+    return formSaved && photoLayoutSaved && photoSaveResults.every(Boolean);
+  }, [persistFormValues, persistPhotoDescription, persistPhotoLayout]);
 
   const handleCancel = async () => {
     await flushPendingChanges();
@@ -755,6 +830,28 @@ export default function ReportEditor({ reportId: requestedReportId }: ReportEdit
         </section>
 
         {pdfError && <p className={styles.pdfError} role="status">{pdfError}</p>}
+
+        <section className={styles.photoLayoutSection} aria-labelledby="photo-layout-title">
+          <h2 id="photo-layout-title">Formato das fotos no relatório</h2>
+          <div aria-label="Formato das fotos" className={styles.photoLayoutControl} role="group">
+            <button
+              aria-pressed={getPhotoLayout(report.photoLayout) === "landscape"}
+              className={getPhotoLayout(report.photoLayout) === "landscape" ? styles.photoLayoutOptionActive : styles.photoLayoutOption}
+              onClick={() => handlePhotoLayoutChange("landscape")}
+              type="button"
+            >
+              Horizontal
+            </button>
+            <button
+              aria-pressed={getPhotoLayout(report.photoLayout) === "portrait"}
+              className={getPhotoLayout(report.photoLayout) === "portrait" ? styles.photoLayoutOptionActive : styles.photoLayoutOption}
+              onClick={() => handlePhotoLayoutChange("portrait")}
+              type="button"
+            >
+              Vertical
+            </button>
+          </div>
+        </section>
 
         <div className={styles.finalActions}>
           <button className={styles.cancelButton} onClick={() => void handleCancel()} type="button">Sair</button>

@@ -23,7 +23,7 @@ O sistema possui Header responsivo com a logo local RIOW, Home e as rotas estát
 
 As imagens são validadas e processadas localmente no navegador: o maior lado é limitado a 1280 px e a versão JPEG gerada utiliza qualidade `0.80`. Apenas a fotografia otimizada e seus metadados são persistidos; previews usam Object URLs temporárias.
 
-O relatório pode ser visualizado na rota de prévia ou salvo como PDF A4 diretamente na edição e na prévia. A geração usa `pdf-lib` inteiramente no navegador, com até quatro fotos na primeira página e seis nas páginas seguintes. O arquivo é gerado sob demanda, não fica armazenado na IndexedDB e recebe o nome `Relatorio_Obra_[NomeDaObra]_[AAAA-MM-DD].pdf`. Após uma geração bem-sucedida, o relatório passa de `draft` para `finished`. Compartilhamento ainda não está implementado.
+O relatório pode ser visualizado na rota de prévia ou salvo como PDF A4 diretamente na edição e na prévia. A geração usa `pdf-lib` inteiramente no navegador. Cada relatório possui o formato de fotos persistido `photoLayout`: **Horizontal** (`landscape`, padrão) usa até quatro fotos na primeira página e seis nas seguintes; **Vertical** (`portrait`) usa até duas na primeira e quatro nas seguintes, com cards mais altos. A escolha é manual para todo o relatório, afeta igualmente prévia e PDF e não reprocessa as imagens. Relatórios antigos sem esse campo assumem Horizontal. O arquivo é gerado sob demanda, não fica armazenado na IndexedDB e recebe o nome `Relatorio_Obra_[NomeDaObra]_[AAAA-MM-DD].pdf`. Após uma geração bem-sucedida, o relatório passa de `draft` para `finished`. Compartilhamento ainda não está implementado.
 
 ## Versionamento
 
@@ -41,12 +41,12 @@ Procedimento de publicação:
 
 A persistência utiliza `dexie` como abstração sobre IndexedDB, sem servidor ou API.
 
-- Banco: `riowReportsDB`, versão 1.
+- Banco: `riowReportsDB`, versão 1. `photoLayout` é uma propriedade não indexada do relatório e, por isso, não requer migração de schema.
 - Tabelas: `reports` e `reportPhotos`.
 - Relatórios são salvos com autosave de 700 ms.
 - Fotografias otimizadas, descrições e ordem são associadas ao relatório na tabela `reportPhotos`.
 - Relatórios podem ser excluídos pela Home; a exclusão remove permanentemente, neste dispositivo, o relatório e todas as suas fotografias associadas.
-- A rota de prévia apresenta o relatório salvo em páginas A4 visuais: até quatro fotos na primeira página e até seis em cada página seguinte. Os botões “Visualizar relatório” e “Salvar PDF” são ações distintas; o PDF pode ser salvo tanto na edição quanto na prévia.
+- A rota de prévia apresenta o relatório salvo em páginas A4 visuais conforme `photoLayout`: Horizontal comporta até quatro fotos na primeira página e seis nas seguintes; Vertical, até duas e quatro. Os botões “Visualizar relatório” e “Salvar PDF” são ações distintas; o PDF pode ser salvo tanto na edição quanto na prévia.
 
 Os dados permanecem somente no navegador e dispositivo atuais. Eles não são sincronizados entre navegadores, celulares, notebooks ou computadores. Limpar os dados do site pode remover a IndexedDB e os relatórios; ela não deve ser tratada como backup definitivo.
 

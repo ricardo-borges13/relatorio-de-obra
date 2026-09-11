@@ -177,8 +177,12 @@
 }
 
 .photoGuidance {
-  margin-top: 10px;
-  color: var(--color-text-muted);
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid #c97a6b;
+  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+  color: #9a4b3d;
+  background: #f9eeea;
   font-size: 0.8125rem;
   line-height: 1.5;
 }
@@ -388,6 +392,63 @@
   color: #805236;
   font-size: 0.8125rem;
   line-height: 1.5;
+}
+
+.photoLayoutSection {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+
+  h2 {
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-weight: 650;
+    line-height: 1.4;
+  }
+}
+
+.photoLayoutControl {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+}
+
+.photoLayoutOption,
+.photoLayoutOptionActive {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  cursor: pointer;
+
+  &:focus-visible {
+    position: relative;
+    outline: 2px solid var(--color-action);
+    outline-offset: -2px;
+  }
+}
+
+.photoLayoutOption + .photoLayoutOption,
+.photoLayoutOption + .photoLayoutOptionActive,
+.photoLayoutOptionActive + .photoLayoutOption,
+.photoLayoutOptionActive + .photoLayoutOptionActive {
+  border-left: 1px solid var(--color-border);
+}
+
+.photoLayoutOption:hover {
+  background: #f8f9f9;
+}
+
+.photoLayoutOptionActive {
+  color: var(--color-action-text);
+  background: var(--color-action);
 }
 
 @media (max-width: 720px) {

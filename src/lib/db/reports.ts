@@ -1,5 +1,6 @@
 import { database } from "./database";
-import type { Report, ReportFormValues } from "@/types/report";
+import type { PhotoLayout, Report, ReportFormValues } from "@/types/report";
+import { DEFAULT_PHOTO_LAYOUT } from "@/lib/reports/paginate-photos";
 
 const createTimestamp = () => new Date().toISOString();
 
@@ -23,6 +24,7 @@ export const createUnsavedDraftReport = (id: string): Report => {
     engineer: "",
     serviceDate: "",
     serviceDescription: "",
+    photoLayout: DEFAULT_PHOTO_LAYOUT,
     status: "draft",
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -75,6 +77,21 @@ export const touchReport = async (id: string) => {
   await database.reports.update(id, { updatedAt });
 
   return updatedAt;
+};
+
+export const saveReportPhotoLayout = async (
+  report: Report,
+  photoLayout: PhotoLayout,
+): Promise<Report> => {
+  const updatedReport: Report = {
+    ...report,
+    photoLayout,
+    updatedAt: createTimestamp(),
+  };
+
+  await database.reports.put(updatedReport);
+
+  return updatedReport;
 };
 
 export const markReportFinished = async (report: Report): Promise<Report> => {

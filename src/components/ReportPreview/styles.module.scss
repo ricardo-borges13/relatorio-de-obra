@@ -213,6 +213,18 @@
   row-gap: 5%;
 }
 
+.portraitPhotoGrid .photoFrame {
+  aspect-ratio: 4 / 5;
+}
+
+.portraitFirstPagePhotoGrid {
+  row-gap: 5%;
+}
+
+.portraitFollowingPagePhotoGrid {
+  row-gap: 4%;
+}
+
 .photoItem {
   display: flex;
   align-self: start;
