@@ -144,6 +144,7 @@ O projeto é publicado como exportação estática do Next.js (`output: "export"
 - Publicar todo o conteúdo de `out/`, inclusive `.htaccess`. O Apache deve ter `mod_rewrite`, `mod_headers` e `AllowOverride FileInfo` para servir rotas estáticas sem extensão e os cabeçalhos do worker.
 - Relatórios existentes usam páginas físicas estáticas com identificador na query string: `/relatorios/editar?id=<id>` e `/relatorios/preview?id=<id>`. Não recriar rotas dinâmicas baseadas no ID sem avaliar a compatibilidade com a exportação estática.
 - As transições entre Home, novo, edição e prévia utilizam navegação HTML nativa, evitando navegação RSC do App Router incompatível com o static export do Next.js 16 em Apache.
+- A rota de precache do service worker deve normalizar essas navegações de documento, incluindo barra final e `?id=`, para as entradas canônicas antes do runtime cache; o fallback `/~offline` é reservado a páginas fora desse fluxo.
 
 ---
 
